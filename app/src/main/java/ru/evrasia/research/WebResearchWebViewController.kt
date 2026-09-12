@@ -2,11 +2,13 @@ package ru.evrasia.research
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
 import android.os.Handler
 import android.os.Message
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -134,6 +136,18 @@ internal class WebResearchWebViewController(
                 }
                 captureController.ensureInstrumentation()
                 captureController.captureLightPageSnapshot()
+            }
+
+            override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onReceivedSslError")
+                        .put("url", error.url ?: "")
+                        .put("primaryError", error.primaryError)
+                )
+                super.onReceivedSslError(view, handler, error)
             }
 
             override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
