@@ -167,6 +167,7 @@ class CaptureRegressionTest {
         val entries = unzip(output.toByteArray())
 
         val required = setOf(
+            "session-manifest.json",
             "raw-events.json",
             "network.har",
             "api-summary.json",
@@ -185,6 +186,18 @@ class CaptureRegressionTest {
         assertEquals(events.length(), raw.getJSONArray("records").length())
         val har = JSONObject(entries.getValue("network.har").toString(Charsets.UTF_8))
         assertTrue(har.getJSONObject("log").getJSONArray("entries").length() >= 3)
+        val manifest = JSONObject(entries.getValue("session-manifest.json").toString(Charsets.UTF_8))
+        assertEquals(1, manifest.getInt("schemaVersion"))
+        assertEquals(events.length(), manifest.getJSONObject("counters").getInt("rawEvents"))
+        assertEquals(1, manifest.getJSONObject("counters").getInt("scriptsArchived"))
+        assertEquals(1, manifest.getJSONObject("counters").getInt("resourcesArchived"))
+        assertEquals(1, manifest.getJSONObject("counters").getInt("browserArtifacts"))
+        assertTrue(manifest.getJSONObject("completeness").getBoolean("pageHtmlCaptured"))
+        assertFalse(manifest.getJSONObject("completeness").getBoolean("fullSnapshotCaptured"))
+        assertTrue(
+            manifest.getJSONArray("warnings").objects()
+                .any { it.getString("code") == "full_snapshot_missing" }
+        )
     }
 
     private fun fixture(): JSONObject {

@@ -42,6 +42,7 @@ Android WebView-инструмент для максимально полног�
 
 Основной результат исследования — ZIP текущей сессии. В него входят, в частности:
 
+- `session-manifest.json` — counters, completeness indicators, фактические предупреждения и явные capture limits;
 - `raw-events.json` — исходный журнал событий;
 - `network.har`;
 - `api-summary.json`;

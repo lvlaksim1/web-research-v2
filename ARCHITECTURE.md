@@ -58,8 +58,11 @@ debugger projection / display
 - page snapshot;
 - clear/reset.
 
+`SessionManifestBuilder` строит только производные metadata экспорта: counters, completeness indicators, capture limits и warnings; он не изменяет raw archive.
+
 `ResearchArchiveExporter` является отдельным read/export слоем и строит:
 
+- `session-manifest.json`;
 - `raw-events.json`;
 - `network.har`;
 - `api-summary.json`;

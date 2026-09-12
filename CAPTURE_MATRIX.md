@@ -24,6 +24,7 @@
 | JS errors | window error / unhandledrejection / console | message, source, line/column, console level | raw `js-error`, `promise-rejection`, `console` | raw | stack зависит от браузера/события |
 | Downloads | WebView DownloadListener | URL, suggested filename, MIME, content length, DownloadManager id/status | raw `download` | raw | файл скачивается Android DownloadManager отдельно; его bytes не встраиваются автоматически в research ZIP |
 | Browser mode | native controller | mobile/desktop mode, UA, viewport result | raw `browser-mode`, `desktop-viewport` | raw | служебное состояние сессии |
+| Session manifest | export-time aggregation | raw/source counters, artifact counters, snapshot completeness indicators, observed warnings, explicit capture limits | derivative export metadata | `session-manifest.json` | не является новым источником трафика и не подменяет raw evidence |
 
 ## Инвариант достоверности
 
@@ -37,8 +38,5 @@
 
 ## Приоритет оставшихся пробелов
 
-- сохранять явный redirect chain и `Location` у derivative resource copies;
-- добавить верхнеуровневый `session-manifest.json` со схемой, counters и completeness indicators;
-- сделать ограничения IndexedDB/Cache Storage/resource bodies видимыми в metadata, а не скрытыми;
 - контролировать рост памяти долгой сессии без молчаливой потери raw evidence;
 - сохранять явные `capture-warning`/omission records при невозможности сохранить крупный артефакт.

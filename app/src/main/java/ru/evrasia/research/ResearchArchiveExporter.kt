@@ -29,6 +29,7 @@ internal class ResearchArchiveExporter(private val archive: ResearchArchive) {
                 zip.closeEntry()
             }
 
+            add("session-manifest.json", SessionManifestBuilder(archive).build(pageUrl).toString(2).toByteArray(Charsets.UTF_8))
             add("network.har", buildHar().toString(2).toByteArray(Charsets.UTF_8))
             add("api-summary.json", buildApiSummary().toString(2).toByteArray(Charsets.UTF_8))
             add("actions.json", buildSourceLog(setOf("user-action", "navigation", "form-submit", "history")).toString(2).toByteArray(Charsets.UTF_8))
