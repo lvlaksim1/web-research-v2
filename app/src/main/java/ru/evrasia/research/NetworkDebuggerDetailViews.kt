@@ -269,7 +269,7 @@ internal class NetworkDebuggerDetailViews(
         val drawable = TechIconDrawable(
             if (expanded) TechIconDrawable.Kind.EXPAND_LESS else TechIconDrawable.Kind.EXPAND_MORE,
             cyan,
-            0.84f
+            0.94f
         ).apply {
             setBounds(0, 0, dp(22), dp(22))
         }
@@ -331,7 +331,7 @@ internal class NetworkDebuggerDetailViews(
                     val treeIcon = TechIconDrawable(
                         if (openInitially) TechIconDrawable.Kind.EXPAND_MORE else TechIconDrawable.Kind.CHEVRON_RIGHT,
                         cyan,
-                        0.86f
+                        0.94f
                     ).apply { setBounds(0, 0, dp(20), dp(20)) }
                     setCompoundDrawablesRelative(treeIcon, null, null, null)
                     compoundDrawablePadding = dp(5)
@@ -383,7 +383,7 @@ internal class NetworkDebuggerDetailViews(
                         val collapsedIcon = TechIconDrawable(
                             TechIconDrawable.Kind.CHEVRON_RIGHT,
                             cyan,
-                            0.86f
+                            0.94f
                         ).apply { setBounds(0, 0, dp(20), dp(20)) }
                         button.setCompoundDrawablesRelative(collapsedIcon, null, null, null)
                     } else {
@@ -395,7 +395,7 @@ internal class NetworkDebuggerDetailViews(
                         val expandedIcon = TechIconDrawable(
                             TechIconDrawable.Kind.EXPAND_MORE,
                             cyan,
-                            0.86f
+                            0.94f
                         ).apply { setBounds(0, 0, dp(20), dp(20)) }
                         button.setCompoundDrawablesRelative(expandedIcon, null, null, null)
                     }

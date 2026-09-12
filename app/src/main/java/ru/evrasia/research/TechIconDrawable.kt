@@ -12,13 +12,13 @@ import android.graphics.drawable.Drawable
  * Small internal vector icon set used by the browser and debugger chrome.
  *
  * Geometry is drawn in a 24x24 virtual viewport. The default content scale
- * produces a 24dp-style glyph inside a 48dp touch target, matching Android
+ * produces a large, optically centered glyph inside a 48dp touch target, matching Android
  * icon-button proportions without depending on font glyphs or external assets.
  */
 class TechIconDrawable(
     private val kind: Kind,
     private val color: Int,
-    private val contentScale: Float = 0.52f
+    private val contentScale: Float = 0.88f
 ) : Drawable() {
     enum class Kind {
         MENU,
@@ -46,7 +46,7 @@ class TechIconDrawable(
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 1.9f
+        strokeWidth = 2.05f
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
         color = this@TechIconDrawable.color
@@ -60,7 +60,7 @@ class TechIconDrawable(
     override fun draw(canvas: Canvas) {
         val b = bounds
         if (b.isEmpty) return
-        val visual = minOf(b.width(), b.height()) * contentScale.coerceIn(0.35f, 0.92f)
+        val visual = minOf(b.width(), b.height()) * contentScale.coerceIn(0.35f, 0.96f)
         val scale = visual / VIEWPORT
         canvas.save()
         canvas.translate(b.exactCenterX() - HALF * scale, b.exactCenterY() - HALF * scale)
@@ -92,9 +92,9 @@ class TechIconDrawable(
                 canvas.drawLine(18.3f, 5.4f, 14.5f, 5.4f, stroke)
             }
 
-            Kind.STOP -> canvas.drawRoundRect(RectF(7.5f, 7.5f, 16.5f, 16.5f), 1.8f, 1.8f, fill)
+            Kind.STOP -> canvas.drawRoundRect(RectF(6.8f, 6.8f, 17.2f, 17.2f), 2f, 2f, fill)
 
-            Kind.RECORD -> canvas.drawCircle(12f, 12f, 4.4f, fill)
+            Kind.RECORD -> canvas.drawCircle(12f, 12f, 5.2f, fill)
 
             Kind.NETWORK -> {
                 canvas.drawLine(7.1f, 7.6f, 10.5f, 10.7f, stroke)
@@ -133,8 +133,8 @@ class TechIconDrawable(
             }
 
             Kind.CLOSE -> {
-                canvas.drawLine(7.2f, 7.2f, 16.8f, 16.8f, stroke)
-                canvas.drawLine(16.8f, 7.2f, 7.2f, 16.8f, stroke)
+                canvas.drawLine(5.8f, 5.8f, 18.2f, 18.2f, stroke)
+                canvas.drawLine(18.2f, 5.8f, 5.8f, 18.2f, stroke)
             }
 
             Kind.BOOKMARK_ADD -> {
