@@ -227,6 +227,9 @@ internal class WebResearchWebViewController(
                             .put("method", it.method)
                             .put("url", url)
                             .put("headers", JSONObject(headers))
+                            .put("isForMainFrame", it.isForMainFrame)
+                            .put("hasGesture", it.hasGesture())
+                            .put("isRedirect", it.isRedirect)
                     )
                     if (it.method.equals("GET", true) && (url.startsWith("http://") || url.startsWith("https://")) && captureController.shouldAutoCopyResource(url, headers)) {
                         captureController.captureResource(url, headers, "auto-static")
