@@ -3,6 +3,28 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v34-START -->
+## v34 — 2026-09-12T21:20:35Z
+
+- Release commit: `d394921f804099f24655095b2c0a8f87d629f1ea`
+- Artifact: `web-research-v34.apk`
+- SHA-256: `2a16b73ca62d53d5a69224d5e24878ae379cacbde796ef9fc61788ac95e6ef27`
+- Previous release: **v33**
+
+### Changes
+
+- ci: send release changes in Telegram
+- ci: fix Telegram changelog workflow syntax
+- ui: polish ZIP recording, bookmarks and search [release]
+
+### Changed files
+
+- `.github/workflows/_release-apk.yml`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt`
+- `app/src/main/java/ru/evrasia/research/WebBookmarkController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt`
+<!-- AUTO-CHANGELOG-v34-END -->
 <!-- AUTO-CHANGELOG-v33-START -->
 ## v33 — 2026-09-12T20:29:36Z
 
