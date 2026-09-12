@@ -188,6 +188,13 @@ class CaptureRegressionTest {
         assertTrue(har.getJSONObject("log").getJSONArray("entries").length() >= 3)
         val manifest = JSONObject(entries.getValue("session-manifest.json").toString(Charsets.UTF_8))
         assertEquals(1, manifest.getInt("schemaVersion"))
+        val forensicManifest = JSONObject(entries.getValue("manifest.json").toString(Charsets.UTF_8))
+        assertEquals("web-research-capture", forensicManifest.getString("format"))
+        assertEquals(3, forensicManifest.getInt("formatVersion"))
+        assertTrue(entries.containsKey("timeline.json"))
+        assertTrue(entries.containsKey("network/requests.json"))
+        assertTrue(entries.containsKey("actions/actions.json"))
+        assertTrue(entries.containsKey("recorder/errors.json"))
         assertEquals(events.length(), manifest.getJSONObject("counters").getInt("rawEvents"))
         assertEquals(1, manifest.getJSONObject("counters").getInt("scriptsArchived"))
         assertEquals(1, manifest.getJSONObject("counters").getInt("resourcesArchived"))
@@ -198,6 +205,47 @@ class CaptureRegressionTest {
             manifest.getJSONArray("warnings").objects()
                 .any { it.getString("code") == "full_snapshot_missing" }
         )
+    }
+
+
+    @Test
+    fun forensicEnvelopeCorrelatesBrowserEvidenceButSeparatesDerivativeTraffic() {
+        val archive = ResearchArchive()
+        val webview = JSONObject()
+            .put("source", "webview")
+            .put("time", 1000L)
+            .put("method", "GET")
+            .put("url", "https://example.test/api/items")
+        archive.addRecord(webview)
+
+        val fetch = JSONObject()
+            .put("source", "fetch")
+            .put("time", 1050L)
+            .put("duration", 40L)
+            .put("method", "GET")
+            .put("url", "https://example.test/api/items")
+            .put("status", 200)
+            .put("responseBody", "{\"ok\":true}")
+        archive.addRecord(fetch)
+
+        val derivative = JSONObject()
+            .put("source", "resource-copy")
+            .put("time", 1100L)
+            .put("method", "GET")
+            .put("url", "https://example.test/api/items")
+            .put("status", 200)
+        archive.addRecord(derivative)
+
+        assertEquals(webview.getString("requestId"), fetch.getString("requestId"))
+        assertFalse(fetch.getString("requestId") == derivative.getString("requestId"))
+        assertEquals(webview.getString("requestId"), derivative.getString("derivedFromRequestId"))
+        assertEquals("fetch", fetch.getString("requestSource"))
+        assertEquals("recorder_derivative", derivative.getString("requestSource"))
+        assertTrue(fetch.getString("timestamp").contains("T"))
+        assertTrue(fetch.has("elapsedRealtimeMs"))
+
+        val logical = ForensicExportBuilder(archive).logicalRequests()
+        assertEquals(2, logical.length())
     }
 
     private fun fixture(): JSONObject {
