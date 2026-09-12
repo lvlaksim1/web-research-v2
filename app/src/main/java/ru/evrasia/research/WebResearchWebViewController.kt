@@ -7,6 +7,7 @@ import android.os.Message
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -132,6 +133,37 @@ internal class WebResearchWebViewController(
                 }
                 captureController.ensureInstrumentation()
                 captureController.captureLightPageSnapshot()
+            }
+
+            override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                super.onReceivedError(view, request, error)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onReceivedError")
+                        .put("url", request.url.toString())
+                        .put("method", request.method)
+                        .put("isForMainFrame", request.isForMainFrame)
+                        .put("errorCode", error.errorCode)
+                        .put("description", error.description?.toString() ?: "")
+                )
+            }
+
+            override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onReceivedHttpError")
+                        .put("url", request.url.toString())
+                        .put("method", request.method)
+                        .put("isForMainFrame", request.isForMainFrame)
+                        .put("status", errorResponse.statusCode)
+                        .put("reasonPhrase", errorResponse.reasonPhrase ?: "")
+                        .put("mimeType", errorResponse.mimeType ?: "")
+                )
             }
 
             override fun onLoadResource(view: WebView, url: String) {
