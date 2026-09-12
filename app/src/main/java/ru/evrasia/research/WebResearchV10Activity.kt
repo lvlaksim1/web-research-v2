@@ -303,6 +303,14 @@ class WebResearchV10Activity : AppCompatActivity() {
             zipButton.contentDescription = "Остановить запись ZIP"
         } else {
             val endedAt = System.currentTimeMillis()
+            addRecord(
+                JSONObject()
+                    .put("source", "checkpoint")
+                    .put("time", endedAt)
+                    .put("label", "after")
+                    .put("reason", "recording_stop")
+                    .put("url", currentPage())
+            )
             zipRecordingStartedAt = null
             WebResearchBrowserLayout.setZipRecording(this, browserViews, false)
             zipButton.contentDescription = "Начать запись ZIP"
