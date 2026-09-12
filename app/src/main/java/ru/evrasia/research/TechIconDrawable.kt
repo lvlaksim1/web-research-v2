@@ -87,9 +87,29 @@ class TechIconDrawable(
             }
 
             Kind.RELOAD -> {
-                canvas.drawArc(RectF(5.2f, 5.2f, 18.8f, 18.8f), 40f, 285f, false, stroke)
-                canvas.drawLine(17.6f, 8.2f, 14.2f, 7.0f, stroke)
-                canvas.drawLine(17.6f, 8.2f, 16.6f, 11.5f, stroke)
+                // Canonical AOSP refresh geometry (ic_refresh), rendered locally
+                // so the app does not need an icon library dependency.
+                path.moveTo(17.65f, 6.35f)
+                path.rCubicTo(-1.63f, -1.63f, -3.94f, -2.57f, -6.48f, -2.31f)
+                path.rCubicTo(-3.67f, 0.37f, -6.69f, 3.35f, -7.1f, 7.02f)
+                path.cubicTo(3.52f, 15.91f, 7.27f, 20f, 12f, 20f)
+                path.rCubicTo(3.19f, 0f, 5.93f, -1.87f, 7.21f, -4.57f)
+                path.rCubicTo(0.31f, -0.66f, -0.16f, -1.43f, -0.89f, -1.43f)
+                path.rLineTo(-0.01f, 0f)
+                path.rCubicTo(-0.37f, 0f, -0.72f, 0.2f, -0.88f, 0.53f)
+                path.rCubicTo(-1.13f, 2.43f, -3.84f, 3.97f, -6.81f, 3.32f)
+                path.rCubicTo(-2.22f, -0.49f, -4.01f, -2.3f, -4.49f, -4.52f)
+                path.cubicTo(5.31f, 9.44f, 8.26f, 6f, 12f, 6f)
+                path.rCubicTo(1.66f, 0f, 3.14f, 0.69f, 4.22f, 1.78f)
+                path.rLineTo(-2.37f, 2.37f)
+                path.cubicTo(13.54f, 10.46f, 13.76f, 11f, 14.21f, 11f)
+                path.lineTo(19f, 11f)
+                path.rCubicTo(0.55f, 0f, 1f, -0.45f, 1f, -1f)
+                path.lineTo(20f, 5.21f)
+                path.rCubicTo(0f, -0.45f, -0.54f, -0.67f, -0.85f, -0.35f)
+                path.lineTo(17.65f, 6.35f)
+                path.close()
+                canvas.drawPath(path, fill)
             }
 
             Kind.STOP -> canvas.drawRoundRect(RectF(6.8f, 6.8f, 17.2f, 17.2f), 2f, 2f, fill)
@@ -133,11 +153,22 @@ class TechIconDrawable(
             }
 
             Kind.CLOSE -> {
-                val normalWidth = stroke.strokeWidth
-                stroke.strokeWidth = 2.4f
-                canvas.drawLine(3.8f, 3.8f, 20.2f, 20.2f, stroke)
-                canvas.drawLine(20.2f, 3.8f, 3.8f, 20.2f, stroke)
-                stroke.strokeWidth = normalWidth
+                // Standard AOSP close proportions: visually balanced inside
+                // the same 48dp touch target as the rest of the icon system.
+                path.moveTo(19f, 6.4f)
+                path.rLineTo(-1.4f, -1.4f)
+                path.rLineTo(-5.6f, 5.6f)
+                path.rLineTo(-5.6f, -5.6f)
+                path.rLineTo(-1.4f, 1.4f)
+                path.rLineTo(5.6f, 5.6f)
+                path.rLineTo(-5.6f, 5.6f)
+                path.rLineTo(1.4f, 1.4f)
+                path.rLineTo(5.6f, -5.6f)
+                path.rLineTo(5.6f, 5.6f)
+                path.rLineTo(1.4f, -1.4f)
+                path.rLineTo(-5.6f, -5.6f)
+                path.close()
+                canvas.drawPath(path, fill)
             }
 
             Kind.BOOKMARK_ADD -> {

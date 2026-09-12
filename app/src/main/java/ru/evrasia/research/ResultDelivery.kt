@@ -134,7 +134,7 @@ internal object ResultDelivery {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        header.addView(squareButton(activity, palette, "×") { dialog.dismiss() }, LinearLayout.LayoutParams(dp(activity, 40), dp(activity, 40)))
+        header.addView(iconButton(activity, palette, TechIconDrawable.Kind.CLOSE, "Закрыть") { dialog.dismiss() }, LinearLayout.LayoutParams(dp(activity, 48), dp(activity, 48)))
         header.addView(TextView(activity).apply {
             text = prepared.title
             setTextColor(palette.text)
@@ -166,12 +166,13 @@ internal object ResultDelivery {
         }, LinearLayout.LayoutParams(-1, dp(activity, 48)).apply { setMargins(dp(activity, 6), 0, dp(activity, 6), 0) })
 
         dialog.setContentView(root)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.setOnShowListener {
-            dialog.window?.apply {
-                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                setLayout((activity.resources.displayMetrics.widthPixels * 0.92f).toInt(), WindowManager.LayoutParams.WRAP_CONTENT)
-                setGravity(Gravity.CENTER)
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setGravity(Gravity.CENTER)
+            setWindowAnimations(0)
+            attributes = attributes.apply {
+                width = (activity.resources.displayMetrics.widthPixels * 0.92f).toInt()
+                height = WindowManager.LayoutParams.WRAP_CONTENT
             }
         }
         dialog.show()
@@ -250,17 +251,22 @@ internal object ResultDelivery {
         return clean.ifBlank { defaultFileName("result") }.take(180)
     }
 
-    private fun squareButton(activity: Activity, palette: WebUiTheme.Palette, symbol: String, click: () -> Unit) = Button(activity).apply {
-        text = symbol
-        setTextColor(palette.accent)
-        textSize = 19f
-        isAllCaps = false
+    private fun iconButton(
+        activity: Activity,
+        palette: WebUiTheme.Palette,
+        icon: TechIconDrawable.Kind,
+        description: String,
+        click: () -> Unit
+    ) = Button(activity).apply {
+        text = ""
+        contentDescription = description
         minWidth = 0
         minimumWidth = 0
         minHeight = 0
         minimumHeight = 0
         setPadding(0, 0, 0, 0)
-        background = rounded(activity, palette.address, 11f, palette.divider)
+        background = rounded(activity, palette.address, 14f, palette.divider)
+        foreground = TechIconDrawable(icon, palette.accent)
         setOnClickListener { click() }
     }
 
