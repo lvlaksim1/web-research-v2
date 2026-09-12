@@ -3,6 +3,26 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v32-START -->
+## v32 — 2026-09-12T19:45:47Z
+
+- Release commit: `3a9fe1f5c54fc2aae8bcb849d4bdd4678e1bbd7f`
+- Artifact: `web-research-v32.apk`
+- SHA-256: `4667c4f0239142e6c1dc0861607c263df70fd4c90b80af9ac60170b311c23b7b`
+- Previous release: **v31**
+
+### Changes
+
+- ui: fix result dialog placement and standardize action icons
+- ui: pin result actions and apply themes safely
+- release: v32 [release]
+
+### Changed files
+
+- `app/src/main/java/ru/evrasia/research/ResultDelivery.kt`
+- `app/src/main/java/ru/evrasia/research/TechIconDrawable.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt`
+<!-- AUTO-CHANGELOG-v32-END -->
 <!-- AUTO-CHANGELOG-v31-START -->
 ## v31 — 2026-09-12T19:18:37Z
 
