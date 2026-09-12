@@ -82,7 +82,17 @@ internal class ResearchArchiveExporter(private val archive: ResearchArchive) {
             }
             add("resources/manifest.json", resourceManifest.toString(2).toByteArray(Charsets.UTF_8))
 
-            extraArtifacts.entries.sortedBy { it.key }.forEach { add("browser/${safePath(it.key)}", it.value) }
+            val sessionPrefix = archive.selectedSessionId.takeIf { it.isNotBlank() }?.let { "capture-session/$it/" }
+            extraArtifacts.entries.sortedBy { it.key }.forEach { item ->
+                val path = if (sessionPrefix != null && item.key.startsWith(sessionPrefix)) {
+                    safePath(item.key.removePrefix(sessionPrefix))
+                } else if (item.key == "environment.json") {
+                    "environment.json"
+                } else {
+                    "browser/${safePath(item.key)}"
+                }
+                add(path, item.value)
+            }
         }
     }
 
