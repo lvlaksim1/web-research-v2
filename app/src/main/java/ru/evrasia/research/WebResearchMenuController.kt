@@ -32,6 +32,7 @@ internal class WebResearchMenuController(
     private var activeSheetDialog: Dialog? = null
     private var activeSheetPanel: LinearLayout? = null
     private var activeSheetBody: LinearLayout? = null
+    private var activeSheetFooter: LinearLayout? = null
     private var activeSheetScroll: ScrollView? = null
     private var activeSheetTitle: TextView? = null
     private var activeSheetBackButton: Button? = null
@@ -228,17 +229,19 @@ internal class WebResearchMenuController(
                     })
                     addDivider()
                 }
-                addPrimaryButton("Действия с cookies") {
-                    ResultDelivery.deliverText(
-                        activity,
-                        "Cookies",
-                        raw,
-                        ResultDelivery.defaultFileName("cookies-${currentHost()}", raw),
-                        "text/plain"
-                    )
-                }
-                addDangerButton("Удалить cookies домена") {
-                    confirmClearCookies(cookies.size) { showCookiesSheet() }
+                activeSheetFooter?.apply {
+                    addPrimaryButton("Действия с cookies") {
+                        ResultDelivery.deliverText(
+                            activity,
+                            "Cookies",
+                            raw,
+                            ResultDelivery.defaultFileName("cookies-${currentHost()}", raw),
+                            "text/plain"
+                        )
+                    }
+                    addDangerButton("Удалить cookies домена") {
+                        confirmClearCookies(cookies.size) { showCookiesSheet() }
+                    }
                 }
             }
         }
@@ -455,9 +458,16 @@ internal class WebResearchMenuController(
         }
         panel.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
+        val footer = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+        panel.addView(footer, LinearLayout.LayoutParams(-1, -2))
+
         activeSheetDialog = dialog
         activeSheetPanel = panel
         activeSheetBody = body
+        activeSheetFooter = footer
         activeSheetScroll = scroll
         activeSheetTitle = titleView
         activeSheetBackButton = backButton
@@ -494,14 +504,19 @@ internal class WebResearchMenuController(
         build: LinearLayout.(Dialog) -> Unit
     ) {
         val body = activeSheetBody ?: return
+        val footer = activeSheetFooter
         body.animate().cancel()
+        footer?.animate()?.cancel()
+        footer?.animate()?.alpha(0f)?.setDuration(90L)?.start()
         body.animate()
             .alpha(0f)
             .setDuration(90L)
             .withEndAction {
                 renderSheet(dialog, title, onBack, build)
                 body.alpha = 0f
+                footer?.alpha = 0f
                 body.animate().alpha(1f).setDuration(140L).start()
+                footer?.animate()?.alpha(1f)?.setDuration(140L)?.start()
             }
             .start()
     }
@@ -517,6 +532,7 @@ internal class WebResearchMenuController(
             visibility = if (onBack == null) View.INVISIBLE else View.VISIBLE
             setOnClickListener { onBack?.invoke() }
         }
+        activeSheetFooter?.removeAllViews()
         activeSheetBody?.apply {
             removeAllViews()
             build(dialog)
@@ -595,6 +611,7 @@ internal class WebResearchMenuController(
         activeSheetDialog = null
         activeSheetPanel = null
         activeSheetBody = null
+        activeSheetFooter = null
         activeSheetScroll = null
         activeSheetTitle = null
         activeSheetBackButton = null
