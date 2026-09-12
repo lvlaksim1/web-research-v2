@@ -89,6 +89,13 @@ internal class WebResearchWebViewController(
                 super.onPageStarted(view, url, favicon)
                 onLoadingChanged(true)
                 onPageUrlChanged(url)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onPageStarted")
+                        .put("url", url)
+                )
                 handler.postDelayed({ captureController.ensureInstrumentation() }, 100)
                 handler.postDelayed({ captureController.ensureInstrumentation() }, 350)
                 if (desktopMode) {
@@ -103,6 +110,13 @@ internal class WebResearchWebViewController(
                 address.setText(url)
                 onPageUrlChanged(url)
                 onLoadingChanged(false)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onPageFinished")
+                        .put("url", url)
+                )
                 record(
                     JSONObject()
                         .put("source", "navigation")
