@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class ResearchArchive {
     val records = JSONArray()
+    private val forensicEnricher = ForensicEventEnricher()
     val scripts = ConcurrentHashMap<String, ByteArray>()
     val scriptErrors = ConcurrentHashMap<String, String>()
     val resources = ConcurrentHashMap<String, ByteArray>()
@@ -19,10 +20,15 @@ class ResearchArchive {
     private val artifactCapturedAt = ConcurrentHashMap<String, Long>()
     @Volatile private var snapshotCapturedAt = 0L
     @Volatile var snapshot = JSONObject()
+    @Volatile internal var selectedSessionId: String = ""
+    @Volatile internal var selectedStartedAt: Long = 0L
+    @Volatile internal var selectedEndedAt: Long = 0L
 
-    @Synchronized fun addRecord(record: JSONObject) {
+    @Synchronized fun addRecord(record: JSONObject): JSONObject {
+        forensicEnricher.enrich(record)
         NetworkRecordPipeline.appendRawAndDebug(records, record)
         recordCapturedAt.add(System.currentTimeMillis())
+        return record
     }
 
     fun putScript(url: String, bytes: ByteArray) {
@@ -68,8 +74,11 @@ class ResearchArchive {
         snapshot = value
     }
 
-    @Synchronized fun snapshotWindow(startedAt: Long, endedAt: Long): ResearchArchive {
+    @Synchronized fun snapshotWindow(startedAt: Long, endedAt: Long, sessionId: String = ""): ResearchArchive {
         val out = ResearchArchive()
+        out.selectedSessionId = sessionId
+        out.selectedStartedAt = startedAt
+        out.selectedEndedAt = endedAt
         for (index in 0 until records.length()) {
             val capturedAt = recordCapturedAt.getOrNull(index) ?: continue
             if (capturedAt in startedAt..endedAt) {
@@ -95,7 +104,8 @@ class ResearchArchive {
         }
         extraArtifacts.forEach { (key, value) ->
             val capturedAt = artifactCapturedAt[key] ?: Long.MIN_VALUE
-            if (capturedAt in startedAt..endedAt) out.extraArtifacts[key] = value.copyOf()
+            val belongsToSession = sessionId.isNotBlank() && key.startsWith("capture-session/$sessionId/")
+            if (capturedAt in startedAt..endedAt || belongsToSession) out.extraArtifacts[key] = value.copyOf()
         }
 
         out.snapshot = try { JSONObject(snapshot.toString()) } catch (_: Exception) { JSONObject() }
@@ -121,6 +131,10 @@ class ResearchArchive {
         artifactCapturedAt.clear()
         snapshotCapturedAt = 0L
         snapshot = JSONObject()
+        selectedSessionId = ""
+        selectedStartedAt = 0L
+        selectedEndedAt = 0L
+        forensicEnricher.reset()
         NetworkRecordPipeline.clearDebugger()
     }
 
