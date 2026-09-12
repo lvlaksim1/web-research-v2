@@ -151,7 +151,7 @@ class CaptureRegressionTest {
         val archive = ResearchArchive()
         val events = fixture.getJSONArray("events")
         for (index in 0 until events.length()) {
-            archive.records.put(JSONObject(events.getJSONObject(index).toString()))
+            archive.addRecord(JSONObject(events.getJSONObject(index).toString()))
         }
         archive.updateSnapshot(JSONObject().put("html", "<html><body>fixture</body></html>"))
         archive.putScript("https://example.test/app.js", "console.log('fixture')".toByteArray())
