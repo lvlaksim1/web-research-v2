@@ -134,6 +134,29 @@ internal class WebResearchWebViewController(
                 captureController.captureLightPageSnapshot()
             }
 
+            override fun onLoadResource(view: WebView, url: String) {
+                super.onLoadResource(view, url)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onLoadResource")
+                        .put("url", url)
+                )
+            }
+
+            override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
+                super.doUpdateVisitedHistory(view, url, isReload)
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "doUpdateVisitedHistory")
+                        .put("url", url)
+                        .put("isReload", isReload)
+                )
+            }
+
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                 request?.let {
                     val url = it.url.toString()
