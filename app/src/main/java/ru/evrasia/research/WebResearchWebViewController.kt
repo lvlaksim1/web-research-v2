@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Message
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -133,6 +134,18 @@ internal class WebResearchWebViewController(
                 }
                 captureController.ensureInstrumentation()
                 captureController.captureLightPageSnapshot()
+            }
+
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                record(
+                    JSONObject()
+                        .put("source", "webview-event")
+                        .put("time", System.currentTimeMillis())
+                        .put("event", "onRenderProcessGone")
+                        .put("didCrash", detail.didCrash())
+                        .put("rendererPriorityAtExit", detail.rendererPriorityAtExit())
+                )
+                return super.onRenderProcessGone(view, detail)
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
