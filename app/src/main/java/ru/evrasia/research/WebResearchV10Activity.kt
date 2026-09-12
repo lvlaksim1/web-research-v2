@@ -3,6 +3,7 @@ package ru.evrasia.research
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,6 +22,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.json.JSONObject
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WebResearchV10Activity : AppCompatActivity() {
@@ -286,6 +289,7 @@ class WebResearchV10Activity : AppCompatActivity() {
         val startedAt = zipRecordingStartedAt
         if (startedAt == null) {
             zipRecordingStartedAt = System.currentTimeMillis()
+            captureEnvironment(zipRecordingStartedAt!!)
             WebResearchBrowserLayout.setZipRecording(this, browserViews, true)
             zipButton.contentDescription = "Остановить запись ZIP"
         } else {
@@ -295,6 +299,30 @@ class WebResearchV10Activity : AppCompatActivity() {
             zipButton.contentDescription = "Начать запись ZIP"
             exportController.exportWindow(startedAt, endedAt)
         }
+    }
+
+    private fun captureEnvironment(startedAt: Long) {
+        val metrics = resources.displayMetrics
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val webViewPackage = WebView.getCurrentWebViewPackage()
+        val environment = JSONObject()
+            .put("captureFormatVersion", 3)
+            .put("recordingStartedAt", startedAt)
+            .put("appVersion", packageInfo.versionName ?: "")
+            .put("versionCode", packageInfo.longVersionCode)
+            .put("androidVersion", Build.VERSION.RELEASE ?: "")
+            .put("apiLevel", Build.VERSION.SDK_INT)
+            .put("manufacturer", Build.MANUFACTURER ?: "")
+            .put("model", Build.MODEL ?: "")
+            .put("webViewPackage", webViewPackage?.packageName ?: "")
+            .put("webViewVersion", webViewPackage?.versionName ?: "")
+            .put("userAgent", web.settings.userAgentString ?: "")
+            .put("widthPixels", metrics.widthPixels)
+            .put("heightPixels", metrics.heightPixels)
+            .put("density", metrics.density)
+            .put("locale", Locale.getDefault().toLanguageTag())
+            .put("timezone", TimeZone.getDefault().id)
+        archive.putArtifact("environment.json", environment.toString(2).toByteArray(Charsets.UTF_8))
     }
 
     @Deprecated("Deprecated in Java")
