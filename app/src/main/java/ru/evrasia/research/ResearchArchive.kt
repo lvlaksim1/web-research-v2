@@ -95,8 +95,9 @@ class ResearchArchive {
     }
 
     @Synchronized fun snapshotWindow(startedAt: Long, endedAt: Long, sessionId: String = ""): ResearchArchive {
+        val effectiveSessionId = sessionId.ifBlank { selectedSessionId }
         val out = ResearchArchive()
-        out.selectedSessionId = sessionId
+        out.selectedSessionId = effectiveSessionId
         out.selectedStartedAt = startedAt
         out.selectedEndedAt = endedAt
         for (index in 0 until records.length()) {
@@ -124,7 +125,7 @@ class ResearchArchive {
         }
         extraArtifacts.forEach { (key, value) ->
             val capturedAt = artifactCapturedAt[key] ?: Long.MIN_VALUE
-            val belongsToSession = sessionId.isNotBlank() && key.startsWith("capture-session/$sessionId/")
+            val belongsToSession = effectiveSessionId.isNotBlank() && key.startsWith("capture-session/$effectiveSessionId/")
             if (capturedAt in startedAt..endedAt || belongsToSession) out.extraArtifacts[key] = value.copyOf()
         }
         snapshots.entries.sortedBy { it.key }.forEach { (capturedAt, value) ->
