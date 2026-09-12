@@ -342,10 +342,45 @@ class WebResearchV10Activity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (::web.isInitialized) {
+            addRecord(
+                JSONObject()
+                    .put("source", "android-lifecycle")
+                    .put("time", System.currentTimeMillis())
+                    .put("event", "onResume")
+                    .put("url", currentPage())
+            )
+        }
         if (::palette.isInitialized) {
             val savedAccent = WebUiTheme.savedAccentColor(this)
             if (savedAccent != palette.accent) applyAccentColor(savedAccent, persist = false)
         }
+    }
+
+    override fun onPause() {
+        if (::web.isInitialized) {
+            addRecord(
+                JSONObject()
+                    .put("source", "android-lifecycle")
+                    .put("time", System.currentTimeMillis())
+                    .put("event", "onPause")
+                    .put("url", currentPage())
+            )
+        }
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (::web.isInitialized) {
+            addRecord(
+                JSONObject()
+                    .put("source", "android-lifecycle")
+                    .put("time", System.currentTimeMillis())
+                    .put("event", "onStop")
+                    .put("url", currentPage())
+            )
+        }
+        super.onStop()
     }
 
     override fun onDestroy() {
