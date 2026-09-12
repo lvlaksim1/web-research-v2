@@ -57,6 +57,7 @@ class WebResearchV10Activity : AppCompatActivity() {
     private val uiHandler = Handler(Looper.getMainLooper())
     private var loading = false
     private var editingAddress = false
+    private var bookmarkBarVisible = false
     private var zipRecordingStartedAt: Long? = null
 
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
@@ -77,7 +78,15 @@ class WebResearchV10Activity : AppCompatActivity() {
                 onAddressGo = { navigateFromAddress() },
                 onAddressFocusChanged = { hasFocus ->
                     editingAddress = hasFocus
+                    setBookmarkBarVisible(hasFocus)
                     updatePageAction()
+                },
+                onAddressFocusedTap = {
+                    setBookmarkBarVisible(!bookmarkBarVisible)
+                },
+                onAddressToolsDismiss = {
+                    if (::address.isInitialized) address.clearFocus()
+                    setBookmarkBarVisible(false)
                 },
                 onAddressChanged = {
                     if (::address.isInitialized && address.hasFocus()) editingAddress = true
@@ -128,7 +137,7 @@ class WebResearchV10Activity : AppCompatActivity() {
             activity = this,
             normalizeUrl = { raw -> navigationController.normalizeUrl(raw) },
             onOpen = { url ->
-                browserViews.bookmarkBar.visibility = View.GONE
+                setBookmarkBarVisible(false)
                 address.clearFocus()
                 navigationController.navigate(url)
             }
@@ -208,10 +217,16 @@ class WebResearchV10Activity : AppCompatActivity() {
     private fun navigateFromAddress() {
         navigationController.navigate(address.text.toString())
         editingAddress = false
-        browserViews.bookmarkBar.visibility = View.GONE
+        setBookmarkBarVisible(false)
         address.clearFocus()
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(address.windowToken, 0)
         updatePageAction()
+    }
+
+    private fun setBookmarkBarVisible(visible: Boolean) {
+        if (!::browserViews.isInitialized || bookmarkBarVisible == visible) return
+        bookmarkBarVisible = visible
+        WebResearchBrowserLayout.setBookmarkBarVisible(this, browserViews, visible)
     }
 
     private fun updatePageAction() {
@@ -271,12 +286,12 @@ class WebResearchV10Activity : AppCompatActivity() {
         val startedAt = zipRecordingStartedAt
         if (startedAt == null) {
             zipRecordingStartedAt = System.currentTimeMillis()
-            browserViews.zipRecordingIndicator.visibility = View.VISIBLE
+            WebResearchBrowserLayout.setZipRecording(this, browserViews, true)
             zipButton.contentDescription = "Остановить запись ZIP"
         } else {
             val endedAt = System.currentTimeMillis()
             zipRecordingStartedAt = null
-            browserViews.zipRecordingIndicator.visibility = View.GONE
+            WebResearchBrowserLayout.setZipRecording(this, browserViews, false)
             zipButton.contentDescription = "Начать запись ZIP"
             exportController.exportWindow(startedAt, endedAt)
         }

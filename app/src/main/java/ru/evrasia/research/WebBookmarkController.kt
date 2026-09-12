@@ -1,7 +1,6 @@
 package ru.evrasia.research
 
 import android.content.Context
-import android.view.MotionEvent
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -18,7 +17,6 @@ internal class WebBookmarkController(
     private val spinnerItems = mutableListOf<String>()
     private var spinner: Spinner? = null
     private var adapter: ArrayAdapter<String>? = null
-    private var selectionArmed = false
 
     init {
         load()
@@ -52,20 +50,12 @@ internal class WebBookmarkController(
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
         target.adapter = adapter
-        target.setOnTouchListener { _, event ->
-            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                selectionArmed = true
-                target.postDelayed({ selectionArmed = false }, 5000L)
-            }
-            false
-        }
         target.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (!selectionArmed || position <= 0 || position >= spinnerItems.size) return
+                if (position <= 0 || position >= spinnerItems.size) return
                 val url = spinnerItems[position]
-                selectionArmed = false
+                target.setSelection(0, false)
                 open(url)
-                target.post { target.setSelection(0, false) }
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit

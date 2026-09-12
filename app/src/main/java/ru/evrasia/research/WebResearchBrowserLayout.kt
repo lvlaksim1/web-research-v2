@@ -1,8 +1,16 @@
 package ru.evrasia.research
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.res.ColorStateList
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorFilter
+import android.graphics.Paint
+import android.graphics.PixelFormat
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.text.Editable
@@ -12,6 +20,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.animation.DecelerateInterpolator
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.EditText
@@ -22,12 +31,15 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.util.WeakHashMap
 
 internal object WebResearchBrowserLayout {
     data class Callbacks(
         val onMenu: () -> Unit,
         val onAddressGo: () -> Unit,
         val onAddressFocusChanged: (Boolean) -> Unit,
+        val onAddressFocusedTap: () -> Unit,
+        val onAddressToolsDismiss: () -> Unit,
         val onAddressChanged: () -> Unit,
         val onPageAction: () -> Unit,
         val onBookmarkAdd: () -> Unit,
@@ -45,12 +57,104 @@ internal object WebResearchBrowserLayout {
         val bookmarkSpinner: Spinner,
         val bookmarkAddButton: Button,
         val zipButton: Button,
-        val zipRecordingIndicator: View,
         val menuButton: Button,
         val networkButton: Button,
         val networkBadge: TextView,
         val progress: ProgressBar
     )
+
+    private val bookmarkBarAnimators = WeakHashMap<View, ValueAnimator>()
+
+    private class ZipRecordingDrawable(private val density: Float) : Drawable() {
+        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(224, 67, 67)
+            style = Paint.Style.FILL
+        }
+
+        override fun draw(canvas: Canvas) {
+            val radius = 4f * density
+            val inset = 10f * density
+            canvas.drawCircle(bounds.right - inset, bounds.top + inset, radius, paint)
+        }
+
+        override fun setAlpha(alpha: Int) {
+            paint.alpha = alpha
+            invalidateSelf()
+        }
+
+        override fun setColorFilter(colorFilter: ColorFilter?) {
+            paint.colorFilter = colorFilter
+            invalidateSelf()
+        }
+
+        @Deprecated("Deprecated in Java")
+        override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
+    }
+
+    fun setZipRecording(
+        activity: AppCompatActivity,
+        views: Views,
+        recording: Boolean
+    ) {
+        views.zipButton.foreground =
+            if (recording) ZipRecordingDrawable(activity.resources.displayMetrics.density) else null
+        views.zipButton.invalidate()
+    }
+
+    fun setBookmarkBarVisible(
+        activity: AppCompatActivity,
+        views: Views,
+        visible: Boolean,
+        animated: Boolean = true
+    ) {
+        val bar = views.bookmarkBar
+        bookmarkBarAnimators.remove(bar)?.cancel()
+
+        val targetHeight = (50 * activity.resources.displayMetrics.density).toInt()
+        val endHeight = if (visible) targetHeight else 0
+        val currentHeight = if (bar.visibility == View.GONE) 0 else bar.layoutParams.height.coerceAtLeast(0)
+        val currentAlpha = if (bar.visibility == View.GONE) 0f else bar.alpha
+        val endAlpha = if (visible) 1f else 0f
+
+        if (!animated) {
+            bar.layoutParams = bar.layoutParams.apply { height = endHeight }
+            bar.alpha = endAlpha
+            bar.visibility = if (visible) View.VISIBLE else View.GONE
+            return
+        }
+
+        if (visible) bar.visibility = View.VISIBLE
+
+        var cancelled = false
+        val animator = ValueAnimator.ofInt(currentHeight, endHeight).apply {
+            duration = 180L
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { valueAnimator ->
+                val fraction = valueAnimator.animatedFraction
+                bar.layoutParams = bar.layoutParams.apply {
+                    height = valueAnimator.animatedValue as Int
+                }
+                bar.alpha = currentAlpha + (endAlpha - currentAlpha) * fraction
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationCancel(animation: Animator) {
+                    cancelled = true
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    if (bookmarkBarAnimators[bar] === this@apply) {
+                        bookmarkBarAnimators.remove(bar)
+                    }
+                    if (cancelled) return
+                    bar.layoutParams = bar.layoutParams.apply { height = endHeight }
+                    bar.alpha = endAlpha
+                    if (!visible) bar.visibility = View.GONE
+                }
+            })
+        }
+        bookmarkBarAnimators[bar] = animator
+        animator.start()
+    }
 
     fun create(
         activity: AppCompatActivity,
@@ -109,6 +213,7 @@ internal object WebResearchBrowserLayout {
         toolbar.addView(menuButton, LinearLayout.LayoutParams(dp(48), dp(48)))
 
         lateinit var bookmarkBar: LinearLayout
+        var addressFocusedOnDown = false
         val address = EditText(activity).apply {
             tag = "browser-address"
             hint = "Адрес сайта"
@@ -121,6 +226,17 @@ internal object WebResearchBrowserLayout {
             setPadding(dp(14), 0, dp(14), 0)
             setText("https://evrasia.rest/")
             setSelectAllOnFocus(true)
+            setOnTouchListener { _, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> addressFocusedOnDown = hasFocus()
+                    MotionEvent.ACTION_UP -> {
+                        if (addressFocusedOnDown && hasFocus()) callbacks.onAddressFocusedTap()
+                        addressFocusedOnDown = false
+                    }
+                    MotionEvent.ACTION_CANCEL -> addressFocusedOnDown = false
+                }
+                false
+            }
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_GO) {
                     callbacks.onAddressGo()
@@ -130,7 +246,6 @@ internal object WebResearchBrowserLayout {
                 }
             }
             onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) bookmarkBar.visibility = View.VISIBLE
                 callbacks.onAddressFocusChanged(hasFocus)
             }
             addTextChangedListener(object : TextWatcher {
@@ -153,10 +268,6 @@ internal object WebResearchBrowserLayout {
         }
         toolbar.addView(pageAction, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(5) })
 
-        val zipContainer = FrameLayout(activity).apply {
-            clipChildren = false
-            clipToPadding = false
-        }
         val zipButton = Button(activity).apply {
             tag = "browser-zip"
             text = "ZIP"
@@ -175,23 +286,7 @@ internal object WebResearchBrowserLayout {
             background = rounded(palette.card, 16f, palette.divider)
             setOnClickListener { callbacks.onZip() }
         }
-        zipContainer.addView(zipButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
-        val zipRecordingIndicator = View(activity).apply {
-            tag = "browser-zip-recording"
-            visibility = View.GONE
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.rgb(224, 67, 67))
-            }
-        }
-        zipContainer.addView(
-            zipRecordingIndicator,
-            FrameLayout.LayoutParams(dp(10), dp(10), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(3)
-                marginEnd = dp(3)
-            }
-        )
-        toolbar.addView(zipContainer, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
+        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
 
         val networkContainer = FrameLayout(activity).apply {
             tag = "browser-network"
@@ -238,12 +333,13 @@ internal object WebResearchBrowserLayout {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             visibility = View.GONE
+            alpha = 0f
             setPadding(dp(59), dp(2), dp(7), dp(4))
             setBackgroundColor(palette.background)
             addView(bookmarkSpinner, LinearLayout.LayoutParams(0, dp(44), 1f))
             addView(bookmarkAddButton, LinearLayout.LayoutParams(dp(48), dp(44)).apply { marginStart = dp(5) })
         }
-        root.addView(bookmarkBar, LinearLayout.LayoutParams(-1, dp(50)))
+        root.addView(bookmarkBar, LinearLayout.LayoutParams(-1, 0))
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             tag = "browser-progress"
@@ -259,8 +355,7 @@ internal object WebResearchBrowserLayout {
             setBackgroundColor(Color.WHITE)
             setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN && bookmarkBar.visibility == View.VISIBLE) {
-                    bookmarkBar.visibility = View.GONE
-                    address.clearFocus()
+                    callbacks.onAddressToolsDismiss()
                 }
                 false
             }
@@ -289,7 +384,6 @@ internal object WebResearchBrowserLayout {
             bookmarkSpinner = bookmarkSpinner,
             bookmarkAddButton = bookmarkAddButton,
             zipButton = zipButton,
-            zipRecordingIndicator = zipRecordingIndicator,
             menuButton = menuButton,
             networkButton = networkButton,
             networkBadge = networkBadge,

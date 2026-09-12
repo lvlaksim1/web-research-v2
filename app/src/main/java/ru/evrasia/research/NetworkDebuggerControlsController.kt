@@ -1,11 +1,13 @@
 package ru.evrasia.research
 
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -190,9 +192,12 @@ internal class NetworkDebuggerControlsController(
                 setMargins(dp(8), 0, dp(8), dp(8))
             }
         )
-        popup = buildPopup(content, 310)
-        showAboveRight(popup, content, anchor, 310)
-        input.requestFocus()
+        popup = buildPopup(content, 310).apply {
+            inputMethodMode = PopupWindow.INPUT_METHOD_NEEDED
+            softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        }
+        showSearchAboveKeyboard(popup, content, anchor, 310)
+        input.post { input.requestFocus() }
     }
 
     private fun showNetworkMenu(anchor: View) {
@@ -375,6 +380,51 @@ internal class NetworkDebuggerControlsController(
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             elevation = dp(10).toFloat()
         }
+
+    private fun showSearchAboveKeyboard(
+        popup: PopupWindow,
+        content: View,
+        anchor: View,
+        widthDp: Int
+    ) {
+        val width = dp(widthDp)
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val height = content.measuredHeight
+        popup.width = width
+        popup.height = height
+
+        val root = anchor.rootView
+        fun position(): IntArray {
+            val visibleFrame = Rect()
+            root.getWindowVisibleDisplayFrame(visibleFrame)
+            val anchorLocation = IntArray(2)
+            anchor.getLocationOnScreen(anchorLocation)
+            val x = (anchorLocation[0] + anchor.width - width).coerceAtLeast(dp(4))
+            val preferredY = anchorLocation[1] - height
+            val maximumY = visibleFrame.bottom - height - dp(8)
+            val minimumY = visibleFrame.top + dp(4)
+            val y = minOf(preferredY, maximumY).coerceAtLeast(minimumY)
+            return intArrayOf(x, y)
+        }
+
+        val initial = position()
+        popup.showAtLocation(anchor.rootView, Gravity.TOP or Gravity.START, initial[0], initial[1])
+
+        val listener = ViewTreeObserver.OnGlobalLayoutListener {
+            if (!popup.isShowing) return@OnGlobalLayoutListener
+            val next = position()
+            popup.update(next[0], next[1], width, height)
+        }
+        root.viewTreeObserver.addOnGlobalLayoutListener(listener)
+        popup.setOnDismissListener {
+            if (root.viewTreeObserver.isAlive) {
+                root.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+            }
+        }
+    }
 
     private fun showAboveRight(
         popup: PopupWindow,
