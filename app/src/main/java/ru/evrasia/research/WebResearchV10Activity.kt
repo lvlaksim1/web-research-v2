@@ -289,6 +289,7 @@ class WebResearchV10Activity : AppCompatActivity() {
         val startedAt = zipRecordingStartedAt
         if (startedAt == null) {
             zipRecordingStartedAt = System.currentTimeMillis()
+            archive.beginForensicSession(zipRecordingStartedAt!!)
             captureEnvironment(zipRecordingStartedAt!!)
             capturePageSnapshot()
             addRecord(
