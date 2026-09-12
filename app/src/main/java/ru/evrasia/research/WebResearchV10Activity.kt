@@ -304,6 +304,7 @@ class WebResearchV10Activity : AppCompatActivity() {
             zipButton.contentDescription = "Остановить запись ZIP"
         } else {
             val endedAt = System.currentTimeMillis()
+            archive.endForensicSession(endedAt)
             addRecord(
                 JSONObject()
                     .put("source", "checkpoint")
