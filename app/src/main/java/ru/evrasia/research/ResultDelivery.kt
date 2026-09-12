@@ -144,35 +144,48 @@ internal object ResultDelivery {
             setPadding(dp(activity, 9), 0, 0, 0)
         }, LinearLayout.LayoutParams(0, dp(activity, 40), 1f))
         root.addView(header)
-        root.addView(TextView(activity).apply {
+
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(activity, 2), dp(activity, 4), dp(activity, 2), dp(activity, 4))
+        }
+        content.addView(TextView(activity).apply {
             text = prepared.file.name
             setTextColor(palette.secondary)
             textSize = 11.5f
             setPadding(dp(activity, 8), dp(activity, 8), dp(activity, 8), dp(activity, 12))
         })
+        root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        root.addView(actionButton(activity, palette, "Скачать файл", true) {
+        val actions = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(activity, 8), 0, 0)
+        }
+        actions.addView(actionButton(activity, palette, "Скачать файл", true) {
             if (download(activity, prepared)) dialog.dismiss()
         }, LinearLayout.LayoutParams(-1, dp(activity, 48)).apply { setMargins(dp(activity, 6), 0, dp(activity, 6), dp(activity, 6)) })
 
-        root.addView(actionButton(activity, palette, "Отправить в другое приложение", false) {
+        actions.addView(actionButton(activity, palette, "Отправить в другое приложение", false) {
             share(activity, prepared)
             dialog.dismiss()
         }, LinearLayout.LayoutParams(-1, dp(activity, 48)).apply { setMargins(dp(activity, 6), 0, dp(activity, 6), dp(activity, 6)) })
 
-        root.addView(actionButton(activity, palette, "Копировать в буфер", false) {
+        actions.addView(actionButton(activity, palette, "Копировать в буфер", false) {
             copy(activity, prepared)
             dialog.dismiss()
         }, LinearLayout.LayoutParams(-1, dp(activity, 48)).apply { setMargins(dp(activity, 6), 0, dp(activity, 6), 0) })
+        root.addView(actions, LinearLayout.LayoutParams(-1, -2))
 
         dialog.setContentView(root)
+        val dm = activity.resources.displayMetrics
+        val dialogHeight = minOf((dm.heightPixels * 0.56f).toInt(), dp(activity, 390))
         dialog.window?.apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             setGravity(Gravity.CENTER)
             setWindowAnimations(0)
             attributes = attributes.apply {
-                width = (activity.resources.displayMetrics.widthPixels * 0.92f).toInt()
-                height = WindowManager.LayoutParams.WRAP_CONTENT
+                width = (dm.widthPixels * 0.92f).toInt()
+                height = dialogHeight
             }
         }
         dialog.show()

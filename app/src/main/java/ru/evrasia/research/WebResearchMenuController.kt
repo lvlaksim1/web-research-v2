@@ -282,9 +282,26 @@ internal class WebResearchMenuController(
             val current = WebUiTheme.savedMode(activity)
             WebUiTheme.Mode.entries.forEach { mode ->
                 addMenuRow(TechIconDrawable.Kind.THEME, mode.label, if (mode == current) "Текущая тема" else "") {
-                    WebUiTheme.save(activity, mode)
-                    dialog.dismiss()
+                    applyThemeMode(dialog, current, mode)
                 }
+            }
+        }
+    }
+
+    private fun applyThemeMode(
+        dialog: Dialog,
+        current: WebUiTheme.Mode,
+        mode: WebUiTheme.Mode
+    ) {
+        activeSheetBody?.animate()?.cancel()
+        activeSheetPanel?.animate()?.cancel()
+        val decor = activity.window.decorView
+        dialog.dismiss()
+        clearActiveSheet()
+        if (mode == current) return
+        decor.post {
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                WebUiTheme.save(activity, mode)
             }
         }
     }
