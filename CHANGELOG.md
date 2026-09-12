@@ -3,6 +3,38 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v29-START -->
+## v29 — 2026-09-12T18:11:11Z
+
+- Release commit: `5cdbfdbba25cac46c1f418a8019cb3b67a697c43`
+- Artifact: `web-research-v29.apk`
+- SHA-256: `88da441e14c97828a33bd9a7c9f69ec35f7e912c7c1ab84bb6a0ffb9fd6f501a`
+- Previous release: **v28**
+
+### Changes
+
+- capture: record explicit omission warnings
+- fix: position bottom sheets before first frame
+- ui: replace glyph buttons with vector icon system
+- release: publish capture and interface improvements [release]
+
+### Changed files
+
+- `CAPTURE_MATRIX.md`
+- `app/src/main/java/ru/evrasia/research/CaptureWarning.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailViews.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailsController.kt`
+- `app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt`
+- `app/src/main/java/ru/evrasia/research/TechIconDrawable.kt`
+- `app/src/main/java/ru/evrasia/research/WebCaptureController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchScripts.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt`
+- `app/src/main/java/ru/evrasia/research/WebResourceCapture.kt`
+- `app/src/test/java/ru/evrasia/research/CaptureWarningRegressionTest.kt`
+<!-- AUTO-CHANGELOG-v29-END -->
 <!-- AUTO-CHANGELOG-v28-START -->
 ## v28 — 2026-09-12T17:30:55Z
 

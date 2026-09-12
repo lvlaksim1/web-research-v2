@@ -3,31 +3,33 @@
 <!-- AUTO-RELEASE-START -->
 ## Контрольная точка рефакторинга
 
-- Актуально для релиза: **v28**
-- Релизный commit: `ba873b1db244a9c8c8d171adc2e48848431b06a6`
-- Опубликован: `2026-09-12T17:30:55Z`
+- Актуально для релиза: **v29**
+- Релизный commit: `5cdbfdbba25cac46c1f418a8019cb3b67a697c43`
+- Опубликован: `2026-09-12T18:11:11Z`
 
 ### Изменения между релизами
 
-- capture: preserve derivative redirect chains
-- ci: synchronize universal APK workflow standard
-- ci: harden release numbering and work-branch validation
-- ci: add automatic work branch cleanup
-- capture: add session completeness manifest
-- release: publish capture completeness improvements [release]
+- capture: record explicit omission warnings
+- fix: position bottom sheets before first frame
+- ui: replace glyph buttons with vector icon system
+- release: publish capture and interface improvements [release]
 
 ### Изменённые файлы
 
-- `.github/scripts/update-release-docs.py`
-- `.github/workflows/_release-apk.yml`
-- `.github/workflows/_release-core.yml`
-- `.github/workflows/cleanup-work-branches.yml`
-- `.github/workflows/validate-work-branches.yml`
 - `CAPTURE_MATRIX.md`
-- `app/src/main/java/ru/evrasia/research/ResearchArchiveExporter.kt`
+- `app/src/main/java/ru/evrasia/research/CaptureWarning.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailViews.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailsController.kt`
 - `app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt`
+- `app/src/main/java/ru/evrasia/research/TechIconDrawable.kt`
+- `app/src/main/java/ru/evrasia/research/WebCaptureController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchScripts.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt`
 - `app/src/main/java/ru/evrasia/research/WebResourceCapture.kt`
-- `app/src/test/java/ru/evrasia/research/CaptureRegressionTest.kt`
+- `app/src/test/java/ru/evrasia/research/CaptureWarningRegressionTest.kt`
 <!-- AUTO-RELEASE-END -->
 
 Автоматическая контрольная точка текущего состояния рефакторинга. Детальные архитектурные инварианты описаны в `ARCHITECTURE.md`.
