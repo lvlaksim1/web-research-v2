@@ -25,6 +25,7 @@
 | Downloads | WebView DownloadListener | URL, suggested filename, MIME, content length, DownloadManager id/status | raw `download` | raw | файл скачивается Android DownloadManager отдельно; его bytes не встраиваются автоматически в research ZIP |
 | Browser mode | native controller | mobile/desktop mode, UA, viewport result | raw `browser-mode`, `desktop-viewport` | raw | служебное состояние сессии |
 | Session manifest | export-time aggregation | raw/source counters, artifact counters, snapshot completeness indicators, observed warnings, explicit capture limits | derivative export metadata | `session-manifest.json` | не является новым источником трафика и не подменяет raw evidence |
+| Capture warnings | native capture + browser instrumentation | точная причина, этап, URL/артефакт и metadata фактической потери/усечения | raw `capture-warning` | `raw-events.json` + сводка в `session-manifest.json` | warning фиксируется только при реально наблюдаемой ошибке или срабатывании лимита |
 
 ## Инвариант достоверности
 
@@ -38,5 +39,4 @@
 
 ## Приоритет оставшихся пробелов
 
-- контролировать рост памяти долгой сессии без молчаливой потери raw evidence;
-- сохранять явные `capture-warning`/omission records при невозможности сохранить крупный артефакт.
+- контролировать рост памяти долгой сессии без молчаливой потери raw evidence.

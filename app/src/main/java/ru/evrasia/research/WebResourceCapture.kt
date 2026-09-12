@@ -169,6 +169,24 @@ internal class WebResourceCapture(
                     .put("evidenceType", "derivative-resource-copy")
                 archive.putResource(url, bytes, resourceMeta)
                 if (looksLikeJs(url) || contentType.contains("javascript", true)) archive.putScript(url, bytes)
+                if (status !in 200..399) {
+                    record(CaptureWarning.create(
+                        code = "resource_copy_http_error",
+                        message = "A derivative resource copy returned an HTTP error; the response evidence was kept.",
+                        stage = "resource-copy",
+                        url = url,
+                        details = JSONObject().put("status", status).put("finalUrl", finalUrl).put("copyMode", copyMode)
+                    ))
+                }
+                if (followed.redirectLimitReached) {
+                    record(CaptureWarning.create(
+                        code = "resource_redirect_limit_reached",
+                        message = "A derivative resource redirect chain reached the configured hop limit.",
+                        stage = "resource-copy",
+                        url = url,
+                        details = JSONObject().put("redirectCount", followed.redirectChain.length()).put("copyMode", copyMode)
+                    ))
+                }
                 record(
                     JSONObject()
                         .put("source", "resource-copy")
@@ -193,6 +211,14 @@ internal class WebResourceCapture(
                 connection.disconnect()
             } catch (e: Exception) {
                 archive.putResourceMeta(url, JSONObject().put("error", e.toString()).put("copyMode", copyMode))
+                record(CaptureWarning.create(
+                    code = "resource_copy_failed",
+                    message = "A derivative resource copy failed and its body could not be archived.",
+                    stage = "resource-copy",
+                    url = url,
+                    error = e.toString(),
+                    details = JSONObject().put("copyMode", copyMode)
+                ))
                 record(
                     JSONObject()
                         .put("source", "resource-copy")
@@ -218,7 +244,38 @@ internal class WebResourceCapture(
                 val connection = followed.connection
                 val status = connection.responseCode
                 val bytes = (if (status in 200..399) connection.inputStream else connection.errorStream)?.use { it.readBytes() }
-                if (bytes != null) archive.putScript(url, bytes) else archive.putScriptError(url, "HTTP $status: empty body")
+                if (bytes != null) {
+                    archive.putScript(url, bytes)
+                } else {
+                    val message = "HTTP $status: empty body"
+                    archive.putScriptError(url, message)
+                    record(CaptureWarning.create(
+                        code = "script_archive_empty_body",
+                        message = "An external JavaScript response had no body to archive.",
+                        stage = "script-archive",
+                        url = url,
+                        error = message,
+                        details = JSONObject().put("status", status).put("finalUrl", followed.finalUrl)
+                    ))
+                }
+                if (status !in 200..399) {
+                    record(CaptureWarning.create(
+                        code = "script_archive_http_error",
+                        message = "An external JavaScript copy returned an HTTP error; available response bytes were kept.",
+                        stage = "script-archive",
+                        url = url,
+                        details = JSONObject().put("status", status).put("finalUrl", followed.finalUrl)
+                    ))
+                }
+                if (followed.redirectLimitReached) {
+                    record(CaptureWarning.create(
+                        code = "script_redirect_limit_reached",
+                        message = "An external JavaScript redirect chain reached the configured hop limit.",
+                        stage = "script-archive",
+                        url = url,
+                        details = JSONObject().put("redirectCount", followed.redirectChain.length())
+                    ))
+                }
                 if (followed.redirectChain.length() > 0) {
                     archive.putArtifact(
                         "script-redirect-${url.hashCode().toUInt().toString(16)}.json",
@@ -234,6 +291,13 @@ internal class WebResourceCapture(
                 connection.disconnect()
             } catch (e: Exception) {
                 archive.putScriptError(url, e.toString())
+                record(CaptureWarning.create(
+                    code = "script_archive_failed",
+                    message = "An external JavaScript file could not be archived.",
+                    stage = "script-archive",
+                    url = url,
+                    error = e.toString()
+                ))
             } finally {
                 downloadingScripts.remove(url)
                 onChanged()

@@ -6,6 +6,7 @@ import org.json.JSONObject
 internal class SessionManifestBuilder(private val archive: ResearchArchive) {
     fun build(pageUrl: String): JSONObject {
         val sourceCounts = linkedMapOf<String, Int>()
+        val warningCodeCounts = linkedMapOf<String, Int>()
         val rawWarnings = JSONArray()
         synchronized(archive) {
             for (index in 0 until archive.records.length()) {
@@ -13,13 +14,9 @@ internal class SessionManifestBuilder(private val archive: ResearchArchive) {
                 val source = record.optString("source", "").ifBlank { "unknown" }
                 sourceCounts[source] = (sourceCounts[source] ?: 0) + 1
                 if (source == "capture-warning") {
-                    rawWarnings.put(
-                        JSONObject()
-                            .put("code", record.optString("code", "capture_warning"))
-                            .put("message", record.optString("message", record.optString("error", "")))
-                            .put("time", record.optLong("time", 0))
-                            .put("url", record.optString("url", record.optString("page", "")))
-                    )
+                    val code = record.optString("code", "capture_warning")
+                    warningCodeCounts[code] = (warningCodeCounts[code] ?: 0) + 1
+                    rawWarnings.put(JSONObject(record.toString()))
                 }
             }
         }
@@ -27,6 +24,8 @@ internal class SessionManifestBuilder(private val archive: ResearchArchive) {
         val snapshot = try { JSONObject(archive.snapshot.toString()) } catch (_: Exception) { JSONObject() }
         val sourceCountsJson = JSONObject()
         sourceCounts.toSortedMap().forEach { (source, count) -> sourceCountsJson.put(source, count) }
+        val warningCodeCountsJson = JSONObject()
+        warningCodeCounts.toSortedMap().forEach { (code, count) -> warningCodeCountsJson.put(code, count) }
 
         var redirectChains = 0
         var redirectHops = 0
@@ -37,7 +36,8 @@ internal class SessionManifestBuilder(private val archive: ResearchArchive) {
             if (hops > 0) redirectChains++
             redirectHops += hops
             if (meta.optBoolean("redirectLimitReached", false)) redirectLimitReached++
-            if (meta.has("error")) resourceCopyFailures++
+            val status = meta.optInt("status", 0)
+            if (meta.has("error") || status >= 400) resourceCopyFailures++
         }
 
         val metadataOnly = archive.resourceMeta.keys.count { !archive.resources.containsKey(it) }
@@ -92,6 +92,8 @@ internal class SessionManifestBuilder(private val archive: ResearchArchive) {
         val counters = JSONObject()
             .put("rawEvents", archive.records.length())
             .put("rawEventsBySource", sourceCountsJson)
+            .put("captureWarnings", rawWarnings.length())
+            .put("captureWarningsByCode", warningCodeCountsJson)
             .put("scriptsArchived", archive.scripts.size)
             .put("scriptErrors", archive.scriptErrors.size)
             .put("resourcesArchived", archive.resources.size)

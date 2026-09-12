@@ -67,14 +67,33 @@ internal class WebCaptureController(
 
     inner class Bridge {
         @JavascriptInterface fun record(json: String) {
-            try { record(JSONObject(json)) } catch (_: Exception) {}
+            try {
+                record(JSONObject(json))
+            } catch (e: Exception) {
+                record(CaptureWarning.create(
+                    code = "bridge_record_parse_failed",
+                    message = "A browser-side event could not be parsed and was omitted.",
+                    stage = "js-bridge",
+                    error = e.toString(),
+                    details = JSONObject().put("payloadChars", json.length)
+                ))
+            }
         }
 
         @JavascriptInterface fun snapshot(json: String) {
             try {
                 archive.updateSnapshot(JSONObject(json))
                 onSnapshot()
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                record(CaptureWarning.create(
+                    code = "snapshot_parse_failed",
+                    message = "The page snapshot could not be parsed and was omitted.",
+                    stage = "snapshot",
+                    url = web.url ?: "",
+                    error = e.toString(),
+                    details = JSONObject().put("payloadChars", json.length)
+                ))
+            }
         }
 
         @JavascriptInterface fun externalScript(url: String) {
@@ -95,6 +114,19 @@ internal class WebCaptureController(
     }
 
     private fun collectChunk(key: String, index: Int, total: Int, chunk: String, script: Boolean) {
+        val stage = if (script) "script-chunk" else "artifact-chunk"
+        if (total <= 0 || index !in 0 until total) {
+            val message = "An invalid chunk index was received; the artifact cannot be reconstructed."
+            if (script) archive.putScriptError(key, message)
+            record(CaptureWarning.create(
+                code = "chunk_invalid_index",
+                message = message,
+                stage = stage,
+                artifact = key,
+                details = JSONObject().put("index", index).put("total", total).put("chunkChars", chunk.length)
+            ))
+            return
+        }
         try {
             val all = if (script) scriptChunks else artifactChunks
             val map = all.getOrPut(key) { ConcurrentHashMap() }
@@ -112,6 +144,14 @@ internal class WebCaptureController(
             }
         } catch (e: Exception) {
             if (script) archive.putScriptError(key, e.toString())
+            record(CaptureWarning.create(
+                code = "chunk_assembly_failed",
+                message = "A chunked browser artifact could not be reconstructed.",
+                stage = stage,
+                artifact = key,
+                error = e.toString(),
+                details = JSONObject().put("index", index).put("total", total).put("chunkChars", chunk.length)
+            ))
         }
     }
 }
