@@ -3,6 +3,24 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v30-START -->
+## v30 — 2026-09-12T18:23:23Z
+
+- Release commit: `5d598ee1d3ed265725c651242785592b8d26c50d`
+- Artifact: `web-research-v30.apk`
+- SHA-256: `0a71e3562aa0df21bb085d9e385869c1714bc0d3435b49e977988b6739daae59`
+- Previous release: **v29**
+
+### Changes
+
+- ui: enlarge and strengthen vector icons
+- release: publish larger bolder vector icons [release]
+
+### Changed files
+
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailViews.kt`
+- `app/src/main/java/ru/evrasia/research/TechIconDrawable.kt`
+<!-- AUTO-CHANGELOG-v30-END -->
 <!-- AUTO-CHANGELOG-v29-START -->
 ## v29 — 2026-09-12T18:11:11Z
 

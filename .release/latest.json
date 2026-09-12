@@ -1,37 +1,23 @@
 {
   "schemaVersion": 1,
-  "releaseNumber": 29,
-  "tag": "v29",
-  "versionCode": 29,
-  "versionName": "v29",
+  "releaseNumber": 30,
+  "tag": "v30",
+  "versionCode": 30,
+  "versionName": "v30",
   "packageId": "web.research",
-  "commit": "5cdbfdbba25cac46c1f418a8019cb3b67a697c43",
-  "artifact": "web-research-v29.apk",
-  "sha256": "88da441e14c97828a33bd9a7c9f69ec35f7e912c7c1ab84bb6a0ffb9fd6f501a",
-  "publishedAt": "2026-09-12T18:11:11Z",
-  "previousRelease": "v28",
-  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v29",
-  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v29/web-research-v29.apk",
+  "commit": "5d598ee1d3ed265725c651242785592b8d26c50d",
+  "artifact": "web-research-v30.apk",
+  "sha256": "0a71e3562aa0df21bb085d9e385869c1714bc0d3435b49e977988b6739daae59",
+  "publishedAt": "2026-09-12T18:23:23Z",
+  "previousRelease": "v29",
+  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v30",
+  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v30/web-research-v30.apk",
   "commits": [
-    "capture: record explicit omission warnings",
-    "fix: position bottom sheets before first frame",
-    "ui: replace glyph buttons with vector icon system",
-    "release: publish capture and interface improvements [release]"
+    "ui: enlarge and strengthen vector icons",
+    "release: publish larger bolder vector icons [release]"
   ],
   "changedFiles": [
-    "CAPTURE_MATRIX.md",
-    "app/src/main/java/ru/evrasia/research/CaptureWarning.kt",
-    "app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt",
     "app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailViews.kt",
-    "app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailsController.kt",
-    "app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt",
-    "app/src/main/java/ru/evrasia/research/TechIconDrawable.kt",
-    "app/src/main/java/ru/evrasia/research/WebCaptureController.kt",
-    "app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt",
-    "app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt",
-    "app/src/main/java/ru/evrasia/research/WebResearchScripts.kt",
-    "app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt",
-    "app/src/main/java/ru/evrasia/research/WebResourceCapture.kt",
-    "app/src/test/java/ru/evrasia/research/CaptureWarningRegressionTest.kt"
+    "app/src/main/java/ru/evrasia/research/TechIconDrawable.kt"
   ]
 }
