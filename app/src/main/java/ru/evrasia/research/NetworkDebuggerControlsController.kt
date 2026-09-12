@@ -59,28 +59,29 @@ internal class NetworkDebuggerControlsController(
         fun addControl(button: Button) {
             controls.addView(
                 button,
-                LinearLayout.LayoutParams(dp(44), dp(44)).apply {
-                    marginEnd = dp(5)
+                LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+                    marginEnd = dp(4)
                 }
             )
         }
 
-        addControl(chromeButton("←", "Назад") { onBack() })
-        addControl(chromeButton("⌄", "Фильтр домена") { showDomainPopup(it) })
-        addControl(chromeButton("⌕", "Поиск") { showSearchPopup(it) })
+        addControl(chromeButton(TechIconDrawable.Kind.BACK, "Назад") { onBack() })
+        addControl(chromeButton(TechIconDrawable.Kind.FILTER, "Фильтр домена") { showDomainPopup(it) })
+        addControl(chromeButton(TechIconDrawable.Kind.SEARCH, "Поиск") { showSearchPopup(it) })
 
         recordButton = chromeButton(
-            if (recording) "■" else "●",
-            if (recording) "Остановить запись" else "Начать запись"
+            if (recording) TechIconDrawable.Kind.STOP else TechIconDrawable.Kind.RECORD,
+            if (recording) "Остановить запись" else "Начать запись",
+            if (recording) palette.red else accent
         ) {
             onRecordingToggle()
         }
         addControl(recordButton!!)
 
-        addControl(chromeButton("⌫", "Очистить журнал") { showClearOptions(it) })
+        addControl(chromeButton(TechIconDrawable.Kind.DELETE, "Очистить журнал") { showClearOptions(it) })
         controls.addView(
-            chromeButton("☰", "Меню") { showNetworkMenu(it) },
-            LinearLayout.LayoutParams(dp(44), dp(44))
+            chromeButton(TechIconDrawable.Kind.MENU, "Меню") { showNetworkMenu(it) },
+            LinearLayout.LayoutParams(dp(48), dp(48))
         )
         return controls
     }
@@ -108,10 +109,13 @@ internal class NetworkDebuggerControlsController(
 
     fun updateRecording(recording: Boolean) {
         recordButton?.apply {
-            text = if (recording) "■" else "●"
+            text = ""
             contentDescription =
                 if (recording) "Остановить запись" else "Начать запись"
-            setTextColor(if (recording) accent else muted)
+            foreground = TechIconDrawable(
+                if (recording) TechIconDrawable.Kind.STOP else TechIconDrawable.Kind.RECORD,
+                if (recording) palette.red else accent
+            )
         }
     }
 
@@ -314,8 +318,8 @@ internal class NetworkDebuggerControlsController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             addView(
-                chromeButton("×", "Закрыть") { close() },
-                LinearLayout.LayoutParams(dp(38), dp(38))
+                chromeButton(TechIconDrawable.Kind.CLOSE, "Закрыть") { close() },
+                LinearLayout.LayoutParams(dp(48), dp(48))
             )
             addView(
                 TextView(activity).apply {
@@ -363,22 +367,21 @@ internal class NetworkDebuggerControlsController(
         }
 
     private fun chromeButton(
-        symbol: String,
+        icon: TechIconDrawable.Kind,
         description: String,
+        iconColor: Int = accent,
         click: (View) -> Unit
     ) =
         Button(activity).apply {
-            text = symbol
+            text = ""
             contentDescription = description
-            setTextColor(accent)
-            textSize = 19f
-            isAllCaps = false
             minWidth = 0
             minimumWidth = 0
             minHeight = 0
             minimumHeight = 0
             setPadding(0, 0, 0, 0)
-            background = rounded(panel2, 11f, line)
+            background = rounded(panel2, 14f, line)
+            foreground = TechIconDrawable(icon, iconColor)
             setOnClickListener { click(this) }
         }
 

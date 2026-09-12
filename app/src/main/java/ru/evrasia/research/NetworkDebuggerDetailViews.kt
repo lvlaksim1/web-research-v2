@@ -104,7 +104,7 @@ internal class NetworkDebuggerDetailViews(
     ) {
         var expanded = open
         val button = Button(activity).apply {
-            text = "$title  ${if (expanded) "▴" else "▾"}"
+            text = title
             setTextColor(cyan)
             textSize = 10f
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
@@ -115,11 +115,13 @@ internal class NetworkDebuggerDetailViews(
             setPadding(dp(12), 0, dp(12), 0)
             background = rounded(panel, 10f, line)
         }
+        setExpandIcon(button, expanded)
         body.visibility = if (expanded) View.VISIBLE else View.GONE
         button.setOnClickListener {
             expanded = !expanded
             body.visibility = if (expanded) View.VISIBLE else View.GONE
-            button.text = "$title  ${if (expanded) "▴" else "▾"}"
+            button.text = title
+            setExpandIcon(button, expanded)
         }
         root.addView(
             button,
@@ -245,6 +247,36 @@ internal class NetworkDebuggerDetailViews(
             setOnClickListener { click() }
         }
 
+    fun compactIconButton(
+        icon: TechIconDrawable.Kind,
+        description: String,
+        click: () -> Unit
+    ) =
+        Button(activity).apply {
+            text = ""
+            contentDescription = description
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            setPadding(0, 0, 0, 0)
+            background = rounded(panel2, 12f, line)
+            foreground = TechIconDrawable(icon, accent)
+            setOnClickListener { click() }
+        }
+
+    private fun setExpandIcon(button: Button, expanded: Boolean) {
+        val drawable = TechIconDrawable(
+            if (expanded) TechIconDrawable.Kind.EXPAND_LESS else TechIconDrawable.Kind.EXPAND_MORE,
+            cyan,
+            0.84f
+        ).apply {
+            setBounds(0, 0, dp(22), dp(22))
+        }
+        button.setCompoundDrawablesRelative(null, null, drawable, null)
+        button.compoundDrawablePadding = dp(7)
+    }
+
     fun dp(value: Int): Int =
         (value * activity.resources.displayMetrics.density).toInt()
 
@@ -285,7 +317,7 @@ internal class NetworkDebuggerDetailViews(
                 var loaded = false
                 val button = Button(activity).apply {
                     text =
-                        "${if (openInitially) "▾" else "▸"} $label  " +
+                        "$label  " +
                             if (value is JSONObject) "{$count}" else "[$count]"
                     setTextColor(cyan)
                     textSize = 10f
@@ -296,6 +328,13 @@ internal class NetworkDebuggerDetailViews(
                     minimumHeight = 0
                     setPadding(indent + dp(8), 0, dp(8), 0)
                     background = rounded(panel, 8f, Color.TRANSPARENT)
+                    val treeIcon = TechIconDrawable(
+                        if (openInitially) TechIconDrawable.Kind.EXPAND_MORE else TechIconDrawable.Kind.CHEVRON_RIGHT,
+                        cyan,
+                        0.86f
+                    ).apply { setBounds(0, 0, dp(20), dp(20)) }
+                    setCompoundDrawablesRelative(treeIcon, null, null, null)
+                    compoundDrawablePadding = dp(5)
                 }
 
                 fun load() {
@@ -339,14 +378,26 @@ internal class NetworkDebuggerDetailViews(
                     if (children.visibility == View.VISIBLE) {
                         children.visibility = View.GONE
                         button.text =
-                            "▸ $label  " +
+                            "$label  " +
                                 if (value is JSONObject) "{$count}" else "[$count]"
+                        val collapsedIcon = TechIconDrawable(
+                            TechIconDrawable.Kind.CHEVRON_RIGHT,
+                            cyan,
+                            0.86f
+                        ).apply { setBounds(0, 0, dp(20), dp(20)) }
+                        button.setCompoundDrawablesRelative(collapsedIcon, null, null, null)
                     } else {
                         load()
                         children.visibility = View.VISIBLE
                         button.text =
-                            "▾ $label  " +
+                            "$label  " +
                                 if (value is JSONObject) "{$count}" else "[$count]"
+                        val expandedIcon = TechIconDrawable(
+                            TechIconDrawable.Kind.EXPAND_MORE,
+                            cyan,
+                            0.86f
+                        ).apply { setBounds(0, 0, dp(20), dp(20)) }
+                        button.setCompoundDrawablesRelative(expandedIcon, null, null, null)
                     }
                 }
                 node.addView(button, LinearLayout.LayoutParams(-1, dp(34)))

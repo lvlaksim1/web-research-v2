@@ -89,8 +89,8 @@ internal class NetworkDebuggerDetailsController(
         }
         val status = event.optInt("status", 0)
         titleRow.addView(
-            views.compactButton("×") { dialog?.dismiss() },
-            LinearLayout.LayoutParams(views.dp(42), views.dp(34)).apply { marginEnd = views.dp(7) }
+            views.compactIconButton(TechIconDrawable.Kind.CLOSE, "Закрыть") { dialog?.dismiss() },
+            LinearLayout.LayoutParams(views.dp(48), views.dp(48)).apply { marginEnd = views.dp(7) }
         )
         titleRow.addView(
             TextView(activity).apply {

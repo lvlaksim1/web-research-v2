@@ -59,20 +59,20 @@ internal object WebResearchBrowserLayout {
                 cornerRadius = dp(radius.toInt()).toFloat()
                 if (stroke != Color.TRANSPARENT) setStroke(dp(1), stroke)
             }
-        fun iconButton(kind: TechIconDrawable.Kind, strong: Boolean, click: () -> Unit): Button =
+        fun iconButton(
+            kind: TechIconDrawable.Kind,
+            description: String,
+            strong: Boolean,
+            click: () -> Unit
+        ): Button =
             Button(activity).apply {
                 text = ""
-                contentDescription = when (kind) {
-                    TechIconDrawable.Kind.MENU -> "Меню"
-                    TechIconDrawable.Kind.NETWORK -> "Network / Research"
-                    TechIconDrawable.Kind.NAVIGATE -> "Перейти"
-                    TechIconDrawable.Kind.BACK -> "Назад"
-                }
+                contentDescription = description
                 minWidth = 0
                 minimumWidth = 0
                 minHeight = 0
                 minimumHeight = 0
-                setPadding(dp(9), dp(9), dp(9), dp(9))
+                setPadding(0, 0, 0, 0)
                 background = rounded(
                     if (strong) palette.card else Color.TRANSPARENT,
                     16f,
@@ -98,8 +98,8 @@ internal object WebResearchBrowserLayout {
             clipToPadding = true
         }
 
-        val menuButton = iconButton(TechIconDrawable.Kind.MENU, false, callbacks.onMenu)
-        toolbar.addView(menuButton, LinearLayout.LayoutParams(dp(42), dp(46)))
+        val menuButton = iconButton(TechIconDrawable.Kind.MENU, "Меню", false, callbacks.onMenu)
+        toolbar.addView(menuButton, LinearLayout.LayoutParams(dp(48), dp(48)))
 
         val address = EditText(activity).apply {
             tag = "browser-address"
@@ -132,23 +132,17 @@ internal object WebResearchBrowserLayout {
                 override fun afterTextChanged(s: Editable?) = Unit
             })
         }
-        toolbar.addView(address, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginStart = dp(4) })
+        toolbar.addView(address, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(4) })
 
-        val pageAction = Button(activity).apply {
+        val pageAction = iconButton(
+            TechIconDrawable.Kind.NAVIGATE,
+            "Перейти",
+            true,
+            callbacks.onPageAction
+        ).apply {
             tag = "browser-page-action"
-            text = "→"
-            textSize = 21f
-            setTextColor(palette.accent)
-            isAllCaps = false
-            minWidth = 0
-            minimumWidth = 0
-            minHeight = 0
-            minimumHeight = 0
-            setPadding(0, 0, 0, 0)
-            background = rounded(palette.card, 16f, palette.divider)
-            setOnClickListener { callbacks.onPageAction() }
         }
-        toolbar.addView(pageAction, LinearLayout.LayoutParams(dp(42), dp(46)).apply { marginStart = dp(5) })
+        toolbar.addView(pageAction, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(5) })
 
         val zipButton = Button(activity).apply {
             tag = "browser-zip"
@@ -167,15 +161,15 @@ internal object WebResearchBrowserLayout {
             background = rounded(palette.card, 13f, palette.divider)
             setOnClickListener { callbacks.onZip() }
         }
-        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(54), dp(46)).apply { marginStart = dp(4) })
+        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(54), dp(48)).apply { marginStart = dp(4) })
 
         val networkContainer = FrameLayout(activity).apply {
             tag = "browser-network"
             clipChildren = true
             clipToPadding = true
         }
-        val networkButton = iconButton(TechIconDrawable.Kind.NETWORK, true, callbacks.onNetwork)
-        networkContainer.addView(networkButton, FrameLayout.LayoutParams(dp(46), dp(46), Gravity.CENTER))
+        val networkButton = iconButton(TechIconDrawable.Kind.NETWORK, "Network / Research", true, callbacks.onNetwork)
+        networkContainer.addView(networkButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
         val networkBadge = TextView(activity).apply {
             tag = "network-badge"
             visibility = View.GONE
@@ -195,8 +189,8 @@ internal object WebResearchBrowserLayout {
                 marginEnd = dp(3)
             }
         )
-        toolbar.addView(networkContainer, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(4) })
-        root.addView(toolbar, LinearLayout.LayoutParams(-1, dp(58)))
+        toolbar.addView(networkContainer, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
+        root.addView(toolbar, LinearLayout.LayoutParams(-1, dp(60)))
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             tag = "browser-progress"
@@ -251,9 +245,14 @@ internal object WebResearchBrowserLayout {
             setColor(fill)
             cornerRadius = dp(radius.toInt()).toFloat()
         }
-        views.pageAction.setTextColor(accent)
         views.zipButton.setTextColor(accent)
         views.menuButton.foreground = TechIconDrawable(TechIconDrawable.Kind.MENU, accent)
+        val pageKind = when (views.pageAction.contentDescription?.toString()) {
+            "Остановить загрузку" -> TechIconDrawable.Kind.STOP
+            "Обновить" -> TechIconDrawable.Kind.RELOAD
+            else -> TechIconDrawable.Kind.NAVIGATE
+        }
+        views.pageAction.foreground = TechIconDrawable(pageKind, accent)
         views.networkButton.foreground = TechIconDrawable(TechIconDrawable.Kind.NETWORK, accent)
         views.networkBadge.setTextColor(WebUiTheme.contrastText(accent))
         views.networkBadge.background = rounded(accent, 9f)

@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.CookieManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -37,11 +38,11 @@ internal class WebResearchMenuController(
         }
         activeBrowserMenu = showBottomSheet("Меню") { dialog ->
             addSection("СТРАНИЦА")
-            addMenuRow("★", "Добавить в закладки", currentHost()) {
+            addMenuRow(TechIconDrawable.Kind.BOOKMARK_ADD, "Добавить в закладки", currentHost()) {
                 bookmarkController.save(currentPage())
                 dialog.dismiss()
             }
-            addMenuRow("▤", "Закладки", "${bookmarkController.all().size} сохранено") {
+            addMenuRow(TechIconDrawable.Kind.BOOKMARKS, "Закладки", "${bookmarkController.all().size} сохранено") {
                 dialog.dismiss()
                 showBookmarksSheet()
             }
@@ -49,21 +50,21 @@ internal class WebResearchMenuController(
 
             addSection("ДАННЫЕ САЙТА")
             val cookieCount = cookieCount()
-            addMenuRow("◉", "Cookies", "${currentHost()} · $cookieCount cookies") {
+            addMenuRow(TechIconDrawable.Kind.COOKIE, "Cookies", "${currentHost()} · $cookieCount cookies") {
                 dialog.dismiss()
                 showCookiesSheet()
             }
-            addMenuRow("⌫", "Удалить cookies домена", if (cookieCount > 0) "$cookieCount cookies" else "Нет cookies") {
+            addMenuRow(TechIconDrawable.Kind.DELETE, "Удалить cookies домена", if (cookieCount > 0) "$cookieCount cookies" else "Нет cookies") {
                 dialog.dismiss()
                 confirmClearCookies(cookieCount)
             }
-            addMenuRow("◈", "Интерфейс", "Тема и цвет элементов") {
+            addMenuRow(TechIconDrawable.Kind.APPEARANCE, "Интерфейс", "Тема и цвет элементов") {
                 dialog.dismiss()
                 showInterfaceMenu()
             }
 
             addSection("ПРИЛОЖЕНИЕ")
-            addMenuRow("i", "О приложении", "web research") {
+            addMenuRow(TechIconDrawable.Kind.INFO, "О приложении", "web research") {
                 dialog.dismiss()
                 showAbout()
             }
@@ -71,7 +72,7 @@ internal class WebResearchMenuController(
     }
 
     fun updateAccent(color: Int) {
-        activeSheetCloseButton?.setTextColor(color)
+        activeSheetCloseButton?.foreground = TechIconDrawable(TechIconDrawable.Kind.CLOSE, color)
     }
 
     fun dismiss() {
@@ -135,7 +136,7 @@ internal class WebResearchMenuController(
 
     private fun showBookmarksSheet() {
         showBottomSheet("Закладки") { dialog ->
-            addMenuRow("★", "Добавить текущую страницу", currentPage()) {
+            addMenuRow(TechIconDrawable.Kind.BOOKMARK_ADD, "Добавить текущую страницу", currentPage()) {
                 bookmarkController.save(currentPage())
                 dialog.dismiss()
                 showBookmarksSheet()
@@ -174,19 +175,21 @@ internal class WebResearchMenuController(
                     })
                     row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
                     row.addView(Button(activity).apply {
-                        text = "×"
-                        textSize = 20f
-                        setTextColor(palette().secondary)
-                        isAllCaps = false
+                        text = ""
+                        contentDescription = "Удалить закладку"
                         minWidth = 0
                         minimumWidth = 0
+                        minHeight = 0
+                        minimumHeight = 0
+                        setPadding(0, 0, 0, 0)
                         background = ColorDrawable(Color.TRANSPARENT)
+                        foreground = TechIconDrawable(TechIconDrawable.Kind.DELETE, palette().red)
                         setOnClickListener {
                             bookmarkController.delete(url)
                             dialog.dismiss()
                             showBookmarksSheet()
                         }
-                    }, LinearLayout.LayoutParams(dp(42), dp(42)))
+                    }, LinearLayout.LayoutParams(dp(48), dp(48)))
                     addView(row)
                     addDivider()
                 }
@@ -261,11 +264,11 @@ internal class WebResearchMenuController(
 
     private fun showInterfaceMenu() {
         showBottomSheet("Интерфейс") { dialog ->
-            addMenuRow("◐", "Тема", WebUiTheme.savedMode(activity).label) {
+            addMenuRow(TechIconDrawable.Kind.THEME, "Тема", WebUiTheme.savedMode(activity).label) {
                 dialog.dismiss()
                 showThemePicker()
             }
-            addMenuRow("●", "Цвет элементов", WebUiTheme.accentLabel(activity)) {
+            addMenuRow(TechIconDrawable.Kind.COLOR, "Цвет элементов", WebUiTheme.accentLabel(activity)) {
                 dialog.dismiss()
                 showAccentPicker()
             }
@@ -276,7 +279,7 @@ internal class WebResearchMenuController(
         showBottomSheet("Тема") { dialog ->
             val current = WebUiTheme.savedMode(activity)
             WebUiTheme.Mode.entries.forEach { mode ->
-                addMenuRow("◐", mode.label, if (mode == current) "Текущая тема" else "") {
+                addMenuRow(TechIconDrawable.Kind.THEME, mode.label, if (mode == current) "Текущая тема" else "") {
                     WebUiTheme.save(activity, mode)
                     dialog.dismiss()
                 }
@@ -365,21 +368,19 @@ internal class WebResearchMenuController(
             setPadding(dp(6), dp(2), dp(8), dp(8))
         }
         val closeButton = Button(activity).apply {
-            text = "×"
+            text = ""
             contentDescription = "Закрыть"
-            setTextColor(palette().accent)
-            textSize = 19f
-            isAllCaps = false
             minWidth = 0
             minimumWidth = 0
             minHeight = 0
             minimumHeight = 0
             setPadding(0, 0, 0, 0)
-            background = rounded(palette().address, 11f, palette().divider)
+            background = rounded(palette().address, 14f, palette().divider)
+            foreground = TechIconDrawable(TechIconDrawable.Kind.CLOSE, palette().accent)
             setOnClickListener { dialog.dismiss() }
         }
         activeSheetCloseButton = closeButton
-        sheetHeader.addView(closeButton, LinearLayout.LayoutParams(dp(40), dp(40)))
+        sheetHeader.addView(closeButton, LinearLayout.LayoutParams(dp(48), dp(48)))
         sheetHeader.addView(TextView(activity).apply {
             text = title
             setTextColor(palette().text)
@@ -387,7 +388,7 @@ internal class WebResearchMenuController(
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(10), 0, 0, 0)
-        }, LinearLayout.LayoutParams(0, dp(40), 1f))
+        }, LinearLayout.LayoutParams(0, dp(48), 1f))
         panel.addView(sheetHeader)
         panel.build(dialog)
 
@@ -455,22 +456,29 @@ internal class WebResearchMenuController(
         })
     }
 
-    private fun LinearLayout.addMenuRow(icon: String, title: String, subtitle: String = "", click: () -> Unit) {
+    private fun LinearLayout.addMenuRow(
+        icon: TechIconDrawable.Kind,
+        title: String,
+        subtitle: String = "",
+        click: () -> Unit
+    ) {
         val row = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(8), dp(12), dp(8))
+            setPadding(dp(10), dp(6), dp(8), dp(6))
             isClickable = true
             isFocusable = true
             setOnClickListener { click() }
         }
-        row.addView(TextView(activity).apply {
-            text = icon
-            setTextColor(palette().accent)
-            textSize = 18f
-            gravity = Gravity.CENTER
-        }, LinearLayout.LayoutParams(dp(34), dp(42)))
-        val labels = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        row.addView(ImageView(activity).apply {
+            setImageDrawable(TechIconDrawable(icon, palette().accent))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        val labels = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
         labels.addView(TextView(activity).apply {
             text = title
             setTextColor(palette().text)
@@ -483,12 +491,11 @@ internal class WebResearchMenuController(
             maxLines = 1
         })
         row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(TextView(activity).apply {
-            text = "›"
-            setTextColor(palette().secondary)
-            textSize = 22f
-            gravity = Gravity.CENTER
-        }, LinearLayout.LayoutParams(dp(28), dp(42)))
+        row.addView(ImageView(activity).apply {
+            setImageDrawable(TechIconDrawable(TechIconDrawable.Kind.CHEVRON_RIGHT, palette().secondary))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(40), dp(48)))
         addView(row)
         addDivider()
     }
@@ -497,7 +504,7 @@ internal class WebResearchMenuController(
         addView(
             View(activity).apply { setBackgroundColor(palette().divider) },
             LinearLayout.LayoutParams(-1, dp(1)).apply {
-                marginStart = dp(48)
+                marginStart = dp(58)
                 marginEnd = dp(10)
             }
         )

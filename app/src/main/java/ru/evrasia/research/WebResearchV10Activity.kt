@@ -204,11 +204,14 @@ class WebResearchV10Activity : AppCompatActivity() {
 
     private fun updatePageAction() {
         if (!::pageAction.isInitialized) return
-        pageAction.text = when {
-            loading -> "✕"
-            editingAddress || address.hasFocus() -> "→"
-            else -> "↻"
+        val (kind, description) = when {
+            loading -> TechIconDrawable.Kind.STOP to "Остановить загрузку"
+            editingAddress || address.hasFocus() -> TechIconDrawable.Kind.NAVIGATE to "Перейти"
+            else -> TechIconDrawable.Kind.RELOAD to "Обновить"
         }
+        pageAction.text = ""
+        pageAction.contentDescription = description
+        pageAction.foreground = TechIconDrawable(kind, palette.accent)
     }
 
     private fun applyAccentColor(color: Int, persist: Boolean) {
