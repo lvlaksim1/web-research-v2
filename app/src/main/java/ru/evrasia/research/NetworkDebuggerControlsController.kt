@@ -22,7 +22,7 @@ internal class NetworkDebuggerControlsController(
     private val methodFilters: List<String>,
     private val onBack: () -> Unit,
     private val onRecordingToggle: () -> Unit,
-    private val onClear: (Boolean) -> Unit,
+    private val onClear: () -> Unit,
     private val onChanged: () -> Unit
 ) {
     data class Filters(
@@ -78,7 +78,7 @@ internal class NetworkDebuggerControlsController(
         }
         addControl(recordButton!!)
 
-        addControl(chromeButton(TechIconDrawable.Kind.DELETE, "Очистить журнал") { showClearOptions(it) })
+        addControl(chromeButton(TechIconDrawable.Kind.DELETE, "Очистить журнал") { onClear() })
         controls.addView(
             chromeButton(TechIconDrawable.Kind.MENU, "Меню") { showNetworkMenu(it) },
             LinearLayout.LayoutParams(dp(48), dp(48))
@@ -117,26 +117,6 @@ internal class NetworkDebuggerControlsController(
                 if (recording) palette.red else accent
             )
         }
-    }
-
-    private fun showClearOptions(anchor: View) {
-        var popup: PopupWindow? = null
-        val content = popupPanel()
-        content.addView(popupHeader("Очистить журнал") { popup?.dismiss() })
-        content.addView(
-            popupRow("Журнал и данные ZIP", false) {
-                popup?.dismiss()
-                onClear(false)
-            }
-        )
-        content.addView(
-            popupRow("Журнал, данные ZIP и все cookies", false) {
-                popup?.dismiss()
-                onClear(true)
-            }
-        )
-        popup = buildPopup(content, 320)
-        showAboveRight(popup, content, anchor, 320)
     }
 
     private fun showDomainPopup(anchor: View) {

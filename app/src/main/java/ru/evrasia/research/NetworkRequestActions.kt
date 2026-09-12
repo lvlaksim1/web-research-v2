@@ -139,14 +139,17 @@ object NetworkRequestActions {
 
                 if (archive != null) {
                     val key = if (source == "replay") "$url#__replay_$started" else url
-                    archive.resources[key] = bytes
-                    archive.resourceMeta[key] = JSONObject()
-                        .put("url", url)
-                        .put("status", status)
-                        .put("contentType", contentType)
-                        .put("finalUrl", finalUrl)
-                        .put("responseHeaders", responseHeaders)
-                        .put("copyMode", copyMode)
+                    archive.putResource(
+                        key,
+                        bytes,
+                        JSONObject()
+                            .put("url", url)
+                            .put("status", status)
+                            .put("contentType", contentType)
+                            .put("finalUrl", finalUrl)
+                            .put("responseHeaders", responseHeaders)
+                            .put("copyMode", copyMode)
+                    )
                     archive.addRecord(record)
                 } else {
                     NetworkDebugStore.add(record)

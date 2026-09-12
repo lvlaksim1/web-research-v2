@@ -1,6 +1,9 @@
 package ru.evrasia.research
 
 import android.content.Context
+import android.view.MotionEvent
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
@@ -12,8 +15,10 @@ internal class WebBookmarkController(
     private val onOpen: (String) -> Unit
 ) {
     private val bookmarks = mutableListOf<String>()
+    private val spinnerItems = mutableListOf<String>()
     private var spinner: Spinner? = null
     private var adapter: ArrayAdapter<String>? = null
+    private var selectionArmed = false
 
     init {
         load()
@@ -30,37 +35,64 @@ internal class WebBookmarkController(
         if (!bookmarks.contains(url)) bookmarks.add(url)
         bookmarks.sort()
         persist()
-        adapter?.notifyDataSetChanged()
-        spinner?.setSelection(bookmarks.indexOf(url).coerceAtLeast(0))
+        refreshSpinner()
         Toast.makeText(activity, "Закладка сохранена", Toast.LENGTH_SHORT).show()
     }
 
     fun delete(url: String) {
         if (bookmarks.remove(url)) {
             persist()
-            adapter?.notifyDataSetChanged()
+            refreshSpinner()
         }
     }
 
     fun bind(target: Spinner) {
         spinner = target
-        adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, bookmarks)
+        adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_item, spinnerItems).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
         target.adapter = adapter
+        target.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                selectionArmed = true
+                target.postDelayed({ selectionArmed = false }, 5000L)
+            }
+            false
+        }
+        target.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (!selectionArmed || position <= 0 || position >= spinnerItems.size) return
+                val url = spinnerItems[position]
+                selectionArmed = false
+                open(url)
+                target.post { target.setSelection(0, false) }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+        refreshSpinner()
+    }
+
+    private fun refreshSpinner() {
+        spinnerItems.clear()
+        spinnerItems.add("Закладки")
+        spinnerItems.addAll(bookmarks)
         adapter?.notifyDataSetChanged()
+        spinner?.setSelection(0, false)
     }
 
     fun openSelected() {
         val current = spinner ?: return
         if (bookmarks.isEmpty()) return
-        val index = current.selectedItemPosition.coerceIn(0, bookmarks.lastIndex)
-        open(bookmarks[index])
+        val index = current.selectedItemPosition - 1
+        if (index in bookmarks.indices) open(bookmarks[index])
     }
 
     fun deleteSelected() {
         val current = spinner ?: return
         if (bookmarks.isEmpty()) return
-        val index = current.selectedItemPosition.coerceIn(0, bookmarks.lastIndex)
-        delete(bookmarks[index])
+        val index = current.selectedItemPosition - 1
+        if (index in bookmarks.indices) delete(bookmarks[index])
     }
 
     private fun load() {

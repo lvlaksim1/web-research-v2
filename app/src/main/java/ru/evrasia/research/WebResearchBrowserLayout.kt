@@ -8,6 +8,7 @@ import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -17,6 +18,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -28,6 +30,7 @@ internal object WebResearchBrowserLayout {
         val onAddressFocusChanged: (Boolean) -> Unit,
         val onAddressChanged: () -> Unit,
         val onPageAction: () -> Unit,
+        val onBookmarkAdd: () -> Unit,
         val onZip: () -> Unit,
         val onNetwork: () -> Unit
     )
@@ -38,7 +41,11 @@ internal object WebResearchBrowserLayout {
         val swipeRefresh: SwipeRefreshLayout,
         val address: EditText,
         val pageAction: Button,
+        val bookmarkBar: LinearLayout,
+        val bookmarkSpinner: Spinner,
+        val bookmarkAddButton: Button,
         val zipButton: Button,
+        val zipRecordingIndicator: View,
         val menuButton: Button,
         val networkButton: Button,
         val networkBadge: TextView,
@@ -101,6 +108,7 @@ internal object WebResearchBrowserLayout {
         val menuButton = iconButton(TechIconDrawable.Kind.MENU, "Меню", false, callbacks.onMenu)
         toolbar.addView(menuButton, LinearLayout.LayoutParams(dp(48), dp(48)))
 
+        lateinit var bookmarkBar: LinearLayout
         val address = EditText(activity).apply {
             tag = "browser-address"
             hint = "Адрес сайта"
@@ -122,6 +130,7 @@ internal object WebResearchBrowserLayout {
                 }
             }
             onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) bookmarkBar.visibility = View.VISIBLE
                 callbacks.onAddressFocusChanged(hasFocus)
             }
             addTextChangedListener(object : TextWatcher {
@@ -144,10 +153,14 @@ internal object WebResearchBrowserLayout {
         }
         toolbar.addView(pageAction, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(5) })
 
+        val zipContainer = FrameLayout(activity).apply {
+            clipChildren = false
+            clipToPadding = false
+        }
         val zipButton = Button(activity).apply {
             tag = "browser-zip"
             text = "ZIP"
-            contentDescription = "Экспорт ZIP"
+            contentDescription = "Начать запись ZIP"
             isAllCaps = false
             textSize = 11.5f
             typeface = Typeface.DEFAULT_BOLD
@@ -162,7 +175,23 @@ internal object WebResearchBrowserLayout {
             background = rounded(palette.card, 16f, palette.divider)
             setOnClickListener { callbacks.onZip() }
         }
-        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
+        zipContainer.addView(zipButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
+        val zipRecordingIndicator = View(activity).apply {
+            tag = "browser-zip-recording"
+            visibility = View.GONE
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.rgb(224, 67, 67))
+            }
+        }
+        zipContainer.addView(
+            zipRecordingIndicator,
+            FrameLayout.LayoutParams(dp(10), dp(10), Gravity.TOP or Gravity.END).apply {
+                topMargin = dp(3)
+                marginEnd = dp(3)
+            }
+        )
+        toolbar.addView(zipContainer, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
 
         val networkContainer = FrameLayout(activity).apply {
             tag = "browser-network"
@@ -193,6 +222,29 @@ internal object WebResearchBrowserLayout {
         toolbar.addView(networkContainer, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
         root.addView(toolbar, LinearLayout.LayoutParams(-1, dp(60)))
 
+        val bookmarkSpinner = Spinner(activity).apply {
+            tag = "browser-bookmarks"
+            contentDescription = "Закладки"
+            background = rounded(palette.address, 14f, palette.divider)
+        }
+        val bookmarkAddButton = iconButton(
+            TechIconDrawable.Kind.BOOKMARK_ADD,
+            "Добавить текущий адрес в закладки",
+            true,
+            callbacks.onBookmarkAdd
+        )
+        bookmarkBar = LinearLayout(activity).apply {
+            tag = "browser-address-tools"
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            visibility = View.GONE
+            setPadding(dp(59), dp(2), dp(7), dp(4))
+            setBackgroundColor(palette.background)
+            addView(bookmarkSpinner, LinearLayout.LayoutParams(0, dp(44), 1f))
+            addView(bookmarkAddButton, LinearLayout.LayoutParams(dp(48), dp(44)).apply { marginStart = dp(5) })
+        }
+        root.addView(bookmarkBar, LinearLayout.LayoutParams(-1, dp(50)))
+
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             tag = "browser-progress"
             max = 100
@@ -205,6 +257,13 @@ internal object WebResearchBrowserLayout {
         val web = WebView(activity).apply {
             tag = "browser-webview"
             setBackgroundColor(Color.WHITE)
+            setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN && bookmarkBar.visibility == View.VISIBLE) {
+                    bookmarkBar.visibility = View.GONE
+                    address.clearFocus()
+                }
+                false
+            }
         }
         lateinit var swipeRefresh: SwipeRefreshLayout
         swipeRefresh = SwipeRefreshLayout(activity).apply {
@@ -226,7 +285,11 @@ internal object WebResearchBrowserLayout {
             swipeRefresh = swipeRefresh,
             address = address,
             pageAction = pageAction,
+            bookmarkBar = bookmarkBar,
+            bookmarkSpinner = bookmarkSpinner,
+            bookmarkAddButton = bookmarkAddButton,
             zipButton = zipButton,
+            zipRecordingIndicator = zipRecordingIndicator,
             menuButton = menuButton,
             networkButton = networkButton,
             networkBadge = networkBadge,
@@ -247,6 +310,7 @@ internal object WebResearchBrowserLayout {
             cornerRadius = dp(radius.toInt()).toFloat()
         }
         views.zipButton.setTextColor(accent)
+        views.bookmarkAddButton.foreground = TechIconDrawable(TechIconDrawable.Kind.BOOKMARK_ADD, accent)
         views.menuButton.foreground = TechIconDrawable(TechIconDrawable.Kind.MENU, accent)
         val pageKind = when (views.pageAction.contentDescription?.toString()) {
             "Остановить загрузку" -> TechIconDrawable.Kind.STOP

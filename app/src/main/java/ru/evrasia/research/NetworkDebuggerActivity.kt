@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.webkit.CookieManager
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.Toast
@@ -88,7 +87,7 @@ class NetworkDebuggerActivity : AppCompatActivity() {
                 NetworkDebugStore.recording = !NetworkDebugStore.recording
                 controlsController.updateRecording(NetworkDebugStore.recording)
             },
-            onClear = { clearCookies -> clearLogData(clearCookies) },
+            onClear = { clearLogData() },
             onChanged = { applyFilters() }
         )
         root.addView(
@@ -117,19 +116,10 @@ class NetworkDebuggerActivity : AppCompatActivity() {
         super.onPause()
     }
 
-    private fun clearLogData(clearCookies: Boolean) {
-        if (!NetworkRequestActions.clearFullSession(this)) NetworkDebugStore.clear()
+    private fun clearLogData() {
+        NetworkDebugStore.clear()
         refreshIncremental(force = true)
-        if (clearCookies) {
-            CookieManager.getInstance().removeAllCookies {
-                CookieManager.getInstance().flush()
-                runOnUiThread {
-                    Toast.makeText(this, "Журнал, данные ZIP и cookies очищены", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            Toast.makeText(this, "Журнал и данные текущего ZIP очищены", Toast.LENGTH_SHORT).show()
-        }
+        Toast.makeText(this, "Журнал очищен", Toast.LENGTH_SHORT).show()
     }
 
     private fun refreshIncremental(force: Boolean = false) {

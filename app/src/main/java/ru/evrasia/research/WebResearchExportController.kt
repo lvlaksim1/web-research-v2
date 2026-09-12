@@ -13,12 +13,16 @@ internal class WebResearchExportController(
     private val web: WebView,
     private val captureSnapshot: () -> Unit
 ) {
-    fun start() {
+    fun exportWindow(startedAt: Long, endedAt: Long) {
         captureSnapshot()
-        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        ResultDelivery.deliverGeneratedFile(activity, "Экспорт ZIP", "web-research-$stamp.zip", "application/zip") { output ->
-            ResearchArchiveExporter(archive).writeZip(output, web.url ?: "")
-        }
+        web.postDelayed({
+            if (activity.isFinishing || activity.isDestroyed) return@postDelayed
+            val selectedArchive = archive.snapshotWindow(startedAt, endedAt)
+            val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+            ResultDelivery.deliverGeneratedFile(activity, "Экспорт ZIP", "web-research-$stamp.zip", "application/zip") { output ->
+                ResearchArchiveExporter(selectedArchive).writeZip(output, web.url ?: "")
+            }
+        }, 250L)
     }
 
     fun handleResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean =

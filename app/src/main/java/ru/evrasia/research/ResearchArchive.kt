@@ -11,13 +11,22 @@ class ResearchArchive {
     val resources = ConcurrentHashMap<String, ByteArray>()
     val resourceMeta = ConcurrentHashMap<String, JSONObject>()
     val extraArtifacts = ConcurrentHashMap<String, ByteArray>()
+    private val recordCapturedAt = mutableListOf<Long>()
+    private val scriptCapturedAt = ConcurrentHashMap<String, Long>()
+    private val scriptErrorCapturedAt = ConcurrentHashMap<String, Long>()
+    private val resourceCapturedAt = ConcurrentHashMap<String, Long>()
+    private val resourceMetaCapturedAt = ConcurrentHashMap<String, Long>()
+    private val artifactCapturedAt = ConcurrentHashMap<String, Long>()
+    @Volatile private var snapshotCapturedAt = 0L
     @Volatile var snapshot = JSONObject()
 
     @Synchronized fun addRecord(record: JSONObject) {
         NetworkRecordPipeline.appendRawAndDebug(records, record)
+        recordCapturedAt.add(System.currentTimeMillis())
     }
 
     fun putScript(url: String, bytes: ByteArray) {
+        scriptCapturedAt[url] = System.currentTimeMillis()
         val previous = scripts.put(url, bytes)
         if (previous == null && isInlineScript(url)) {
             NetworkRecordPipeline.addDebuggerOnly(JSONObject()
@@ -32,24 +41,66 @@ class ResearchArchive {
     }
 
     fun putScriptError(url: String, error: String) {
+        scriptErrorCapturedAt[url] = System.currentTimeMillis()
         scriptErrors[url] = error
     }
 
     fun putResource(url: String, bytes: ByteArray, meta: JSONObject) {
+        val capturedAt = System.currentTimeMillis()
+        resourceCapturedAt[url] = capturedAt
+        resourceMetaCapturedAt[url] = capturedAt
         resources[url] = bytes
         resourceMeta[url] = meta
     }
 
     fun putResourceMeta(url: String, meta: JSONObject) {
+        resourceMetaCapturedAt[url] = System.currentTimeMillis()
         resourceMeta[url] = meta
     }
 
     fun putArtifact(key: String, bytes: ByteArray) {
+        artifactCapturedAt[key] = System.currentTimeMillis()
         extraArtifacts[key] = bytes
     }
 
     fun updateSnapshot(value: JSONObject) {
+        snapshotCapturedAt = System.currentTimeMillis()
         snapshot = value
+    }
+
+    @Synchronized fun snapshotWindow(startedAt: Long, endedAt: Long): ResearchArchive {
+        val out = ResearchArchive()
+        for (index in 0 until records.length()) {
+            val capturedAt = recordCapturedAt.getOrNull(index) ?: continue
+            if (capturedAt in startedAt..endedAt) {
+                records.optJSONObject(index)?.let { out.records.put(JSONObject(it.toString())) }
+            }
+        }
+
+        scripts.forEach { (key, value) ->
+            val capturedAt = scriptCapturedAt[key] ?: Long.MIN_VALUE
+            if (capturedAt in startedAt..endedAt) out.scripts[key] = value.copyOf()
+        }
+        scriptErrors.forEach { (key, value) ->
+            val capturedAt = scriptErrorCapturedAt[key] ?: Long.MIN_VALUE
+            if (capturedAt in startedAt..endedAt) out.scriptErrors[key] = value
+        }
+        resources.forEach { (key, value) ->
+            val capturedAt = resourceCapturedAt[key] ?: Long.MIN_VALUE
+            if (capturedAt in startedAt..endedAt) out.resources[key] = value.copyOf()
+        }
+        resourceMeta.forEach { (key, value) ->
+            val capturedAt = resourceMetaCapturedAt[key] ?: Long.MIN_VALUE
+            if (capturedAt in startedAt..endedAt) out.resourceMeta[key] = JSONObject(value.toString())
+        }
+        extraArtifacts.forEach { (key, value) ->
+            val capturedAt = artifactCapturedAt[key] ?: Long.MIN_VALUE
+            if (capturedAt in startedAt..endedAt) out.extraArtifacts[key] = value.copyOf()
+        }
+
+        out.snapshot = try { JSONObject(snapshot.toString()) } catch (_: Exception) { JSONObject() }
+        out.snapshotCapturedAt = snapshotCapturedAt
+        return out
     }
 
     private fun isInlineScript(url: String): Boolean =
@@ -62,6 +113,13 @@ class ResearchArchive {
         resources.clear()
         resourceMeta.clear()
         extraArtifacts.clear()
+        recordCapturedAt.clear()
+        scriptCapturedAt.clear()
+        scriptErrorCapturedAt.clear()
+        resourceCapturedAt.clear()
+        resourceMetaCapturedAt.clear()
+        artifactCapturedAt.clear()
+        snapshotCapturedAt = 0L
         snapshot = JSONObject()
         NetworkRecordPipeline.clearDebugger()
     }

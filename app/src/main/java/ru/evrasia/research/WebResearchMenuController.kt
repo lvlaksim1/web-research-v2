@@ -49,13 +49,6 @@ internal class WebResearchMenuController(
     private fun showMainMenuSheet() {
         val dialog = showBottomSheet("Меню", onBack = null) { sheet ->
             addSection("СТРАНИЦА")
-            addMenuRow(TechIconDrawable.Kind.BOOKMARK_ADD, "Добавить в закладки", currentHost()) {
-                bookmarkController.save(currentPage())
-                sheet.dismiss()
-            }
-            addMenuRow(TechIconDrawable.Kind.BOOKMARKS, "Закладки", "${bookmarkController.all().size} сохранено") {
-                showBookmarksSheet()
-            }
             addSiteVersionRow(sheet)
 
             addSection("ДАННЫЕ САЙТА")
@@ -451,8 +444,16 @@ internal class WebResearchMenuController(
         val body = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
         }
-        val scroll = ScrollView(activity).apply {
+        val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
+        val scroll = SheetScrollView(
+            activity,
+            touchSlop,
+            onDrag = { dy -> panel.translationY = dy.coerceAtLeast(0f) * 0.82f },
+            onRelease = { dy, elapsed -> finishSwipeDismiss(panel, dialog, dy, elapsed) },
+            onCancel = { panel.animate().translationY(0f).setDuration(120L).start() }
+        ).apply {
             isFillViewport = true
+            overScrollMode = View.OVER_SCROLL_NEVER
             setBackgroundColor(Color.TRANSPARENT)
             addView(body, ViewGroup.LayoutParams(-1, -2))
         }
@@ -474,7 +475,7 @@ internal class WebResearchMenuController(
         activeSheetCloseButton = closeButton
 
         renderSheet(dialog, title, onBack, build)
-        installSwipeDismiss(scroll, sheetHeader, titleView, panel, dialog)
+        installSwipeDismiss(sheetHeader, titleView, panel, dialog)
 
         dialog.setContentView(panel)
         val sheetHeight = (activity.resources.displayMetrics.heightPixels * 0.72f).toInt()
@@ -541,7 +542,6 @@ internal class WebResearchMenuController(
     }
 
     private fun installSwipeDismiss(
-        scroll: ScrollView,
         header: View,
         title: View,
         panel: View,
@@ -550,60 +550,55 @@ internal class WebResearchMenuController(
         val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
         var startY = 0f
         var startTime = 0L
-        var canDrag = false
         var dragging = false
 
-        val listener = View.OnTouchListener { source, event ->
+        val listener = View.OnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     startY = event.rawY
                     startTime = event.eventTime
-                    canDrag = source !== scroll || scroll.scrollY == 0
                     dragging = false
-                    source !== scroll
+                    true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dy = event.rawY - startY
-                    if (canDrag && dy > touchSlop) {
-                        dragging = true
-                        panel.translationY = dy * 0.82f
-                        true
-                    } else {
-                        false
-                    }
+                    if (dy > touchSlop) dragging = true
+                    if (dragging) panel.translationY = dy.coerceAtLeast(0f) * 0.82f
+                    true
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (!dragging) {
-                        false
-                    } else {
+                    if (dragging) {
                         val dy = (event.rawY - startY).coerceAtLeast(0f)
                         val elapsed = (event.eventTime - startTime).coerceAtLeast(1L)
-                        val velocity = dy * 1000f / elapsed
-                        val close = dy >= panel.height * 0.18f || velocity >= dp(900)
-                        if (close) {
-                            panel.animate()
-                                .translationY(panel.height.toFloat())
-                                .setDuration(160L)
-                                .withEndAction { dialog.dismiss() }
-                                .start()
-                        } else {
-                            panel.animate().translationY(0f).setDuration(140L).start()
-                        }
-                        dragging = false
-                        true
+                        finishSwipeDismiss(panel, dialog, dy, elapsed)
                     }
+                    dragging = false
+                    true
                 }
                 MotionEvent.ACTION_CANCEL -> {
-                    if (dragging) panel.animate().translationY(0f).setDuration(140L).start()
+                    if (dragging) panel.animate().translationY(0f).setDuration(120L).start()
                     dragging = false
-                    false
+                    true
                 }
-                else -> false
+                else -> true
             }
         }
-        scroll.setOnTouchListener(listener)
         header.setOnTouchListener(listener)
         title.setOnTouchListener(listener)
+    }
+
+    private fun finishSwipeDismiss(panel: View, dialog: Dialog, dy: Float, elapsed: Long) {
+        val velocity = dy * 1000f / elapsed.coerceAtLeast(1L)
+        val close = dy >= panel.height * 0.18f || velocity >= dp(900)
+        if (close) {
+            panel.animate()
+                .translationY(panel.height.toFloat())
+                .setDuration(160L)
+                .withEndAction { dialog.dismiss() }
+                .start()
+        } else {
+            panel.animate().translationY(0f).setDuration(120L).start()
+        }
     }
 
     private fun clearActiveSheet() {
@@ -728,4 +723,83 @@ internal class WebResearchMenuController(
             cornerRadius = dp(radius.toInt()).toFloat()
             if (stroke != Color.TRANSPARENT) setStroke(dp(1), stroke)
         }
+
+    private class SheetScrollView(
+        context: android.content.Context,
+        private val touchSlop: Int,
+        private val onDrag: (Float) -> Unit,
+        private val onRelease: (Float, Long) -> Unit,
+        private val onCancel: () -> Unit
+    ) : ScrollView(context) {
+        private var startX = 0f
+        private var startY = 0f
+        private var startTime = 0L
+        private var dragEligible = false
+        private var dragging = false
+
+        override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> rememberDown(event)
+                MotionEvent.ACTION_MOVE -> {
+                    if (!dragging && shouldStartDrag(event)) {
+                        dragging = true
+                        parent?.requestDisallowInterceptTouchEvent(true)
+                        return true
+                    }
+                    if (dragging) return true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> if (dragging) return true
+            }
+            return super.onInterceptTouchEvent(event)
+        }
+
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> rememberDown(event)
+                MotionEvent.ACTION_MOVE -> {
+                    if (!dragging && shouldStartDrag(event)) {
+                        dragging = true
+                        parent?.requestDisallowInterceptTouchEvent(true)
+                    }
+                    if (dragging) {
+                        onDrag((event.rawY - startY).coerceAtLeast(0f))
+                        return true
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (dragging) {
+                        val dy = (event.rawY - startY).coerceAtLeast(0f)
+                        val elapsed = (event.eventTime - startTime).coerceAtLeast(1L)
+                        dragging = false
+                        onRelease(dy, elapsed)
+                        return true
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (dragging) {
+                        dragging = false
+                        onCancel()
+                        return true
+                    }
+                }
+            }
+            return super.onTouchEvent(event)
+        }
+
+        private fun rememberDown(event: MotionEvent) {
+            startX = event.rawX
+            startY = event.rawY
+            startTime = event.eventTime
+            dragEligible = scrollY == 0
+            dragging = false
+        }
+
+        private fun shouldStartDrag(event: MotionEvent): Boolean {
+            if (!dragEligible) return false
+            val dx = event.rawX - startX
+            val dy = event.rawY - startY
+            return dy > touchSlop && kotlin.math.abs(dy) > kotlin.math.abs(dx)
+        }
+    }
+
 }
