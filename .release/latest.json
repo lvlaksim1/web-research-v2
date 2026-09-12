@@ -1,25 +1,35 @@
 {
   "schemaVersion": 1,
-  "releaseNumber": 27,
-  "tag": "v27",
-  "versionCode": 27,
-  "versionName": "v27",
+  "releaseNumber": 28,
+  "tag": "v28",
+  "versionCode": 28,
+  "versionName": "v28",
   "packageId": "web.research",
-  "commit": "90ad694a9530993316136d6ec98e48c671c3dd97",
-  "artifact": "web-research-v27.apk",
-  "sha256": "8ae44ec6ec850060d89e89178394a7fb43f8335720dfebe5b288c1edcb66a74d",
-  "publishedAt": "2026-09-10T12:22:56Z",
-  "previousRelease": "v26",
-  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v27",
-  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v27/web-research-v27.apk",
+  "commit": "ba873b1db244a9c8c8d171adc2e48848431b06a6",
+  "artifact": "web-research-v28.apk",
+  "sha256": "64f6ddabe98eb8112ad35a3c2e80c84d60ad81d76e462e4f0dc1ade429f275c0",
+  "publishedAt": "2026-09-12T17:30:55Z",
+  "previousRelease": "v27",
+  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v28",
+  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v28/web-research-v28.apk",
   "commits": [
-    "test: add deterministic capture regression suite",
-    "release: publish regression guard [release]"
+    "capture: preserve derivative redirect chains",
+    "ci: synchronize universal APK workflow standard",
+    "ci: harden release numbering and work-branch validation",
+    "ci: add automatic work branch cleanup",
+    "capture: add session completeness manifest",
+    "release: publish capture completeness improvements [release]"
   ],
   "changedFiles": [
-    ".github/actions/build-apk/action.yml",
-    "app/build.gradle.kts",
-    "app/src/test/java/ru/evrasia/research/CaptureRegressionTest.kt",
-    "app/src/test/resources/session-fixture.json"
+    ".github/scripts/update-release-docs.py",
+    ".github/workflows/_release-apk.yml",
+    ".github/workflows/_release-core.yml",
+    ".github/workflows/cleanup-work-branches.yml",
+    ".github/workflows/validate-work-branches.yml",
+    "CAPTURE_MATRIX.md",
+    "app/src/main/java/ru/evrasia/research/ResearchArchiveExporter.kt",
+    "app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt",
+    "app/src/main/java/ru/evrasia/research/WebResourceCapture.kt",
+    "app/src/test/java/ru/evrasia/research/CaptureRegressionTest.kt"
   ]
 }

@@ -3,6 +3,36 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v28-START -->
+## v28 — 2026-09-12T17:30:55Z
+
+- Release commit: `ba873b1db244a9c8c8d171adc2e48848431b06a6`
+- Artifact: `web-research-v28.apk`
+- SHA-256: `64f6ddabe98eb8112ad35a3c2e80c84d60ad81d76e462e4f0dc1ade429f275c0`
+- Previous release: **v27**
+
+### Changes
+
+- capture: preserve derivative redirect chains
+- ci: synchronize universal APK workflow standard
+- ci: harden release numbering and work-branch validation
+- ci: add automatic work branch cleanup
+- capture: add session completeness manifest
+- release: publish capture completeness improvements [release]
+
+### Changed files
+
+- `.github/scripts/update-release-docs.py`
+- `.github/workflows/_release-apk.yml`
+- `.github/workflows/_release-core.yml`
+- `.github/workflows/cleanup-work-branches.yml`
+- `.github/workflows/validate-work-branches.yml`
+- `CAPTURE_MATRIX.md`
+- `app/src/main/java/ru/evrasia/research/ResearchArchiveExporter.kt`
+- `app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt`
+- `app/src/main/java/ru/evrasia/research/WebResourceCapture.kt`
+- `app/src/test/java/ru/evrasia/research/CaptureRegressionTest.kt`
+<!-- AUTO-CHANGELOG-v28-END -->
 <!-- AUTO-CHANGELOG-v27-START -->
 ## v27 — 2026-09-10T12:22:56Z
 

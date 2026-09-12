@@ -3,21 +3,31 @@
 <!-- AUTO-RELEASE-START -->
 ## Контрольная точка рефакторинга
 
-- Актуально для релиза: **v27**
-- Релизный commit: `90ad694a9530993316136d6ec98e48c671c3dd97`
-- Опубликован: `2026-09-10T12:22:56Z`
+- Актуально для релиза: **v28**
+- Релизный commit: `ba873b1db244a9c8c8d171adc2e48848431b06a6`
+- Опубликован: `2026-09-12T17:30:55Z`
 
 ### Изменения между релизами
 
-- test: add deterministic capture regression suite
-- release: publish regression guard [release]
+- capture: preserve derivative redirect chains
+- ci: synchronize universal APK workflow standard
+- ci: harden release numbering and work-branch validation
+- ci: add automatic work branch cleanup
+- capture: add session completeness manifest
+- release: publish capture completeness improvements [release]
 
 ### Изменённые файлы
 
-- `.github/actions/build-apk/action.yml`
-- `app/build.gradle.kts`
+- `.github/scripts/update-release-docs.py`
+- `.github/workflows/_release-apk.yml`
+- `.github/workflows/_release-core.yml`
+- `.github/workflows/cleanup-work-branches.yml`
+- `.github/workflows/validate-work-branches.yml`
+- `CAPTURE_MATRIX.md`
+- `app/src/main/java/ru/evrasia/research/ResearchArchiveExporter.kt`
+- `app/src/main/java/ru/evrasia/research/SessionManifestBuilder.kt`
+- `app/src/main/java/ru/evrasia/research/WebResourceCapture.kt`
 - `app/src/test/java/ru/evrasia/research/CaptureRegressionTest.kt`
-- `app/src/test/resources/session-fixture.json`
 <!-- AUTO-RELEASE-END -->
 
 Автоматическая контрольная точка текущего состояния рефакторинга. Детальные архитектурные инварианты описаны в `ARCHITECTURE.md`.
