@@ -534,13 +534,13 @@ jobs:
             CHANGELOG_LINES="• Служебный релиз без отдельных пользовательских изменений"
           fi
           CHANGELOG_TEXT=$(CHANGELOG_LINES="$CHANGELOG_LINES" python3 - <<'PY'
-import os
-text = os.environ.get("CHANGELOG_LINES", "").strip()
-limit = 800
-if len(text) > limit:
-    text = text[:limit - 1].rstrip() + "…"
-print(text)
-PY
+          import os
+          text = os.environ.get("CHANGELOG_LINES", "").strip()
+          limit = 800
+          if len(text) > limit:
+              text = text[:limit - 1].rstrip() + "…"
+          print(text)
+          PY
           )
 
           RELEASE_JSON=$(gh api "/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" 2>/dev/null || true)
