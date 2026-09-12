@@ -91,7 +91,11 @@ class ResearchArchive {
         snapshots[capturedAt] = JSONObject(copy.toString())
         val sessionId = selectedSessionId
         if (sessionId.isNotBlank()) {
-            val label = if (selectedEndedAt > 0L && capturedAt >= selectedEndedAt) "after" else "checkpoint"
+            val label = when {
+                selectedEndedAt > 0L && capturedAt >= selectedEndedAt -> "after"
+                snapshots.size == 1 -> "before"
+                else -> "checkpoint"
+            }
             putArtifact(
                 "capture-session/$sessionId/checkpoints/$label-$capturedAt.json",
                 copy.toString(2).toByteArray(Charsets.UTF_8)
