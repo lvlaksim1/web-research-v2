@@ -149,19 +149,20 @@ internal object WebResearchBrowserLayout {
             text = "ZIP"
             contentDescription = "Экспорт ZIP"
             isAllCaps = false
-            textSize = 9.5f
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = 11.5f
+            typeface = Typeface.DEFAULT_BOLD
+            letterSpacing = .08f
             gravity = Gravity.CENTER
             setTextColor(palette.accent)
             minWidth = 0
             minimumWidth = 0
             minHeight = 0
             minimumHeight = 0
-            setPadding(dp(4), 0, dp(4), 0)
-            background = rounded(palette.card, 13f, palette.divider)
+            setPadding(0, 0, 0, 0)
+            background = rounded(palette.card, 16f, palette.divider)
             setOnClickListener { callbacks.onZip() }
         }
-        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(54), dp(48)).apply { marginStart = dp(4) })
+        toolbar.addView(zipButton, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(4) })
 
         val networkContainer = FrameLayout(activity).apply {
             tag = "browser-network"

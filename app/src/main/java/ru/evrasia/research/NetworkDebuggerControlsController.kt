@@ -412,11 +412,13 @@ internal class NetworkDebuggerControlsController(
         }
         val height =
             if (popup.height > 0) popup.height else content.measuredHeight
-        popup.showAsDropDown(
-            anchor,
-            anchor.width - width,
-            -height - anchor.height
-        )
+        popup.width = width
+        popup.height = height
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val x = (location[0] + anchor.width - width).coerceAtLeast(dp(4))
+        val y = (location[1] - height).coerceAtLeast(dp(4))
+        popup.showAtLocation(anchor.rootView, Gravity.TOP or Gravity.START, x, y)
     }
 
     private fun dp(value: Int): Int =

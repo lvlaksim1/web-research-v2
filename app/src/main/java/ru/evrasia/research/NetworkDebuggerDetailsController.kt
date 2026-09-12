@@ -435,14 +435,12 @@ internal class NetworkDebuggerDetailsController(
         val detailsDialog = AlertDialog.Builder(activity).setView(root).create()
         dialog = detailsDialog
         val dm = activity.resources.displayMetrics
-        detailsDialog.setOnShowListener {
-            detailsDialog.window?.apply {
-                setBackgroundDrawable(views.rounded(bg, 18f, line))
-                setLayout(
-                    (dm.widthPixels * 0.97).toInt(),
-                    (dm.heightPixels * 0.92).toInt()
-                )
-                setGravity(Gravity.CENTER)
+        detailsDialog.window?.apply {
+            setBackgroundDrawable(views.rounded(bg, 18f, line))
+            setGravity(Gravity.CENTER)
+            attributes = attributes.apply {
+                width = (dm.widthPixels * 0.97).toInt()
+                height = (dm.heightPixels * 0.92).toInt()
             }
         }
         detailsDialog.show()

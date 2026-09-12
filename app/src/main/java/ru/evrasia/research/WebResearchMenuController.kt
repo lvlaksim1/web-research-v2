@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.webkit.CookieManager
 import android.widget.Button
@@ -29,6 +30,11 @@ internal class WebResearchMenuController(
 ) {
     private var activeBrowserMenu: Dialog? = null
     private var activeSheetDialog: Dialog? = null
+    private var activeSheetPanel: LinearLayout? = null
+    private var activeSheetBody: LinearLayout? = null
+    private var activeSheetScroll: ScrollView? = null
+    private var activeSheetTitle: TextView? = null
+    private var activeSheetBackButton: Button? = null
     private var activeSheetCloseButton: Button? = null
 
     fun toggleBrowserMenu() {
@@ -36,51 +42,49 @@ internal class WebResearchMenuController(
             it.dismiss()
             return
         }
-        activeBrowserMenu = showBottomSheet("Меню") { dialog ->
+        showMainMenuSheet()
+    }
+
+    private fun showMainMenuSheet() {
+        val dialog = showBottomSheet("Меню", onBack = null) { sheet ->
             addSection("СТРАНИЦА")
             addMenuRow(TechIconDrawable.Kind.BOOKMARK_ADD, "Добавить в закладки", currentHost()) {
                 bookmarkController.save(currentPage())
-                dialog.dismiss()
+                sheet.dismiss()
             }
             addMenuRow(TechIconDrawable.Kind.BOOKMARKS, "Закладки", "${bookmarkController.all().size} сохранено") {
-                dialog.dismiss()
                 showBookmarksSheet()
             }
-            addSiteVersionRow(dialog)
+            addSiteVersionRow(sheet)
 
             addSection("ДАННЫЕ САЙТА")
             val cookieCount = cookieCount()
             addMenuRow(TechIconDrawable.Kind.COOKIE, "Cookies", "${currentHost()} · $cookieCount cookies") {
-                dialog.dismiss()
                 showCookiesSheet()
             }
             addMenuRow(TechIconDrawable.Kind.DELETE, "Удалить cookies домена", if (cookieCount > 0) "$cookieCount cookies" else "Нет cookies") {
-                dialog.dismiss()
                 confirmClearCookies(cookieCount)
             }
             addMenuRow(TechIconDrawable.Kind.APPEARANCE, "Интерфейс", "Тема и цвет элементов") {
-                dialog.dismiss()
                 showInterfaceMenu()
             }
 
             addSection("ПРИЛОЖЕНИЕ")
             addMenuRow(TechIconDrawable.Kind.INFO, "О приложении", "web research") {
-                dialog.dismiss()
                 showAbout()
             }
         }
+        activeBrowserMenu = dialog
     }
 
     fun updateAccent(color: Int) {
+        activeSheetBackButton?.foreground = TechIconDrawable(TechIconDrawable.Kind.BACK, color)
         activeSheetCloseButton?.foreground = TechIconDrawable(TechIconDrawable.Kind.CLOSE, color)
     }
 
     fun dismiss() {
-        activeBrowserMenu?.dismiss()
         activeSheetDialog?.dismiss()
-        activeBrowserMenu = null
-        activeSheetDialog = null
-        activeSheetCloseButton = null
+        clearActiveSheet()
     }
 
     private fun LinearLayout.addSiteVersionRow(dialog: Dialog) {
@@ -138,7 +142,6 @@ internal class WebResearchMenuController(
         showBottomSheet("Закладки") { dialog ->
             addMenuRow(TechIconDrawable.Kind.BOOKMARK_ADD, "Добавить текущую страницу", currentPage()) {
                 bookmarkController.save(currentPage())
-                dialog.dismiss()
                 showBookmarksSheet()
             }
             val saved = bookmarkController.all()
@@ -186,7 +189,6 @@ internal class WebResearchMenuController(
                         foreground = TechIconDrawable(TechIconDrawable.Kind.DELETE, palette().red)
                         setOnClickListener {
                             bookmarkController.delete(url)
-                            dialog.dismiss()
                             showBookmarksSheet()
                         }
                     }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -236,19 +238,21 @@ internal class WebResearchMenuController(
                     )
                 }
                 addDangerButton("Удалить cookies домена") {
-                    dialog.dismiss()
-                    confirmClearCookies(cookies.size)
+                    confirmClearCookies(cookies.size) { showCookiesSheet() }
                 }
             }
         }
     }
 
-    private fun confirmClearCookies(count: Int) {
+    private fun confirmClearCookies(
+        count: Int,
+        onBack: () -> Unit = { showMainMenuSheet() }
+    ) {
         if (count <= 0) {
             webViewController.clearCurrentDomainCookies()
             return
         }
-        showBottomSheet("Удалить cookies?") { dialog ->
+        showBottomSheet("Удалить cookies?", onBack = onBack) { dialog ->
             addView(TextView(activity).apply {
                 text = "Удалить $count cookies для ${currentHost()}?"
                 setTextColor(palette().text)
@@ -265,18 +269,16 @@ internal class WebResearchMenuController(
     private fun showInterfaceMenu() {
         showBottomSheet("Интерфейс") { dialog ->
             addMenuRow(TechIconDrawable.Kind.THEME, "Тема", WebUiTheme.savedMode(activity).label) {
-                dialog.dismiss()
                 showThemePicker()
             }
             addMenuRow(TechIconDrawable.Kind.COLOR, "Цвет элементов", WebUiTheme.accentLabel(activity)) {
-                dialog.dismiss()
                 showAccentPicker()
             }
         }
     }
 
     private fun showThemePicker() {
-        showBottomSheet("Тема") { dialog ->
+        showBottomSheet("Тема", onBack = { showInterfaceMenu() }) { dialog ->
             val current = WebUiTheme.savedMode(activity)
             WebUiTheme.Mode.entries.forEach { mode ->
                 addMenuRow(TechIconDrawable.Kind.THEME, mode.label, if (mode == current) "Текущая тема" else "") {
@@ -288,7 +290,7 @@ internal class WebResearchMenuController(
     }
 
     private fun showAccentPicker() {
-        showBottomSheet("Цвет элементов") { _ ->
+        showBottomSheet("Цвет элементов", onBack = { showInterfaceMenu() }) { _ ->
             addView(TextView(activity).apply {
                 text = "Водите пальцем по большой палитре для насыщенности и яркости, а по нижней цветной полосе — для оттенка. Изменение применяется сразу."
                 setTextColor(palette().secondary)
@@ -351,22 +353,66 @@ internal class WebResearchMenuController(
         }
     }
 
-    private fun showBottomSheet(title: String, build: LinearLayout.(Dialog) -> Unit): Dialog {
+    private fun showBottomSheet(
+        title: String,
+        onBack: (() -> Unit)? = { showMainMenuSheet() },
+        build: LinearLayout.(Dialog) -> Unit
+    ): Dialog {
+        val currentDialog = activeSheetDialog
+        val currentBody = activeSheetBody
+        if (currentDialog != null && currentDialog.isShowing && currentBody != null) {
+            transitionSheet(currentDialog, title, onBack, build)
+            return currentDialog
+        }
+
         val dialog = Dialog(activity)
         dialog.setCanceledOnTouchOutside(false)
         dialog.setCancelable(true)
-        activeSheetDialog = dialog
 
         val panel = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(6), dp(12), dp(6), dp(16))
+            setPadding(dp(6), dp(8), dp(6), dp(12))
             background = rounded(palette().card, 22f, palette().divider)
+            alpha = 0f
         }
+        val dragHandle = View(activity).apply {
+            background = rounded(palette().secondary, 2f)
+        }
+        panel.addView(
+            dragHandle,
+            LinearLayout.LayoutParams(dp(38), dp(4)).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                setMargins(0, dp(2), 0, dp(6))
+            }
+        )
+
         val sheetHeader = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(6), dp(2), dp(8), dp(8))
+            setPadding(dp(4), 0, dp(4), dp(6))
         }
+        val backButton = Button(activity).apply {
+            text = ""
+            contentDescription = "Назад"
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            setPadding(0, 0, 0, 0)
+            background = rounded(palette().address, 14f, palette().divider)
+            foreground = TechIconDrawable(TechIconDrawable.Kind.BACK, palette().accent)
+        }
+        sheetHeader.addView(backButton, LinearLayout.LayoutParams(dp(48), dp(48)))
+
+        val titleView = TextView(activity).apply {
+            setTextColor(palette().text)
+            textSize = 18f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), 0, dp(10), 0)
+        }
+        sheetHeader.addView(titleView, LinearLayout.LayoutParams(0, dp(48), 1f))
+
         val closeButton = Button(activity).apply {
             text = ""
             contentDescription = "Закрыть"
@@ -379,70 +425,163 @@ internal class WebResearchMenuController(
             foreground = TechIconDrawable(TechIconDrawable.Kind.CLOSE, palette().accent)
             setOnClickListener { dialog.dismiss() }
         }
-        activeSheetCloseButton = closeButton
         sheetHeader.addView(closeButton, LinearLayout.LayoutParams(dp(48), dp(48)))
-        sheetHeader.addView(TextView(activity).apply {
-            text = title
-            setTextColor(palette().text)
-            textSize = 18f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), 0, 0, 0)
-        }, LinearLayout.LayoutParams(0, dp(48), 1f))
         panel.addView(sheetHeader)
-        panel.build(dialog)
 
-        var swipeStartY = 0f
-        var swipeStartedAtTop = false
+        val body = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             setBackgroundColor(Color.TRANSPARENT)
-            addView(panel, ViewGroup.LayoutParams(-1, -2))
-            setOnTouchListener { _, event ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_DOWN -> {
-                        swipeStartY = event.rawY
-                        swipeStartedAtTop = scrollY == 0
-                        false
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        val closeBySwipe = swipeStartedAtTop && event.rawY - swipeStartY >= dp(72)
-                        swipeStartedAtTop = false
-                        if (closeBySwipe) {
-                            dialog.dismiss()
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                    MotionEvent.ACTION_CANCEL -> {
-                        swipeStartedAtTop = false
-                        false
-                    }
-                    else -> false
-                }
-            }
+            addView(body, ViewGroup.LayoutParams(-1, -2))
         }
-        dialog.setContentView(scroll)
+        panel.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+
+        activeSheetDialog = dialog
+        activeSheetPanel = panel
+        activeSheetBody = body
+        activeSheetScroll = scroll
+        activeSheetTitle = titleView
+        activeSheetBackButton = backButton
+        activeSheetCloseButton = closeButton
+
+        renderSheet(dialog, title, onBack, build)
+        installSwipeDismiss(scroll, sheetHeader, titleView, panel, dialog)
+
+        dialog.setContentView(panel)
+        val sheetHeight = (activity.resources.displayMetrics.heightPixels * 0.72f).toInt()
         dialog.window?.apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             setGravity(Gravity.BOTTOM)
+            setWindowAnimations(0)
             attributes = attributes.apply {
                 width = WindowManager.LayoutParams.MATCH_PARENT
-                height = WindowManager.LayoutParams.WRAP_CONTENT
+                height = sheetHeight
                 dimAmount = 0.35f
             }
         }
         dialog.setOnDismissListener {
-            if (activeSheetDialog === dialog) {
-                activeSheetDialog = null
-                activeSheetCloseButton = null
-            }
-            if (activeBrowserMenu === dialog) activeBrowserMenu = null
+            if (activeSheetDialog === dialog) clearActiveSheet()
         }
         dialog.show()
+        panel.animate().alpha(1f).setDuration(140L).start()
         return dialog
+    }
+
+    private fun transitionSheet(
+        dialog: Dialog,
+        title: String,
+        onBack: (() -> Unit)?,
+        build: LinearLayout.(Dialog) -> Unit
+    ) {
+        val body = activeSheetBody ?: return
+        body.animate().cancel()
+        body.animate()
+            .alpha(0f)
+            .setDuration(90L)
+            .withEndAction {
+                renderSheet(dialog, title, onBack, build)
+                body.alpha = 0f
+                body.animate().alpha(1f).setDuration(140L).start()
+            }
+            .start()
+    }
+
+    private fun renderSheet(
+        dialog: Dialog,
+        title: String,
+        onBack: (() -> Unit)?,
+        build: LinearLayout.(Dialog) -> Unit
+    ) {
+        activeSheetTitle?.text = title
+        activeSheetBackButton?.apply {
+            visibility = if (onBack == null) View.INVISIBLE else View.VISIBLE
+            setOnClickListener { onBack?.invoke() }
+        }
+        activeSheetBody?.apply {
+            removeAllViews()
+            build(dialog)
+        }
+        activeSheetScroll?.scrollTo(0, 0)
+    }
+
+    private fun installSwipeDismiss(
+        scroll: ScrollView,
+        header: View,
+        title: View,
+        panel: View,
+        dialog: Dialog
+    ) {
+        val touchSlop = ViewConfiguration.get(activity).scaledTouchSlop
+        var startY = 0f
+        var startTime = 0L
+        var canDrag = false
+        var dragging = false
+
+        val listener = View.OnTouchListener { source, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    startY = event.rawY
+                    startTime = event.eventTime
+                    canDrag = source !== scroll || scroll.scrollY == 0
+                    dragging = false
+                    source !== scroll
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dy = event.rawY - startY
+                    if (canDrag && dy > touchSlop) {
+                        dragging = true
+                        panel.translationY = dy * 0.82f
+                        true
+                    } else {
+                        false
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (!dragging) {
+                        false
+                    } else {
+                        val dy = (event.rawY - startY).coerceAtLeast(0f)
+                        val elapsed = (event.eventTime - startTime).coerceAtLeast(1L)
+                        val velocity = dy * 1000f / elapsed
+                        val close = dy >= panel.height * 0.18f || velocity >= dp(900)
+                        if (close) {
+                            panel.animate()
+                                .translationY(panel.height.toFloat())
+                                .setDuration(160L)
+                                .withEndAction { dialog.dismiss() }
+                                .start()
+                        } else {
+                            panel.animate().translationY(0f).setDuration(140L).start()
+                        }
+                        dragging = false
+                        true
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (dragging) panel.animate().translationY(0f).setDuration(140L).start()
+                    dragging = false
+                    false
+                }
+                else -> false
+            }
+        }
+        scroll.setOnTouchListener(listener)
+        header.setOnTouchListener(listener)
+        title.setOnTouchListener(listener)
+    }
+
+    private fun clearActiveSheet() {
+        activeBrowserMenu = null
+        activeSheetDialog = null
+        activeSheetPanel = null
+        activeSheetBody = null
+        activeSheetScroll = null
+        activeSheetTitle = null
+        activeSheetBackButton = null
+        activeSheetCloseButton = null
     }
 
     private fun LinearLayout.addSection(label: String) {

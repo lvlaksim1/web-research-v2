@@ -43,18 +43,17 @@ internal class NetworkReplayController(
             setPadding(dp(6), dp(5), dp(8), dp(5))
         }
         header.addView(Button(activity).apply {
-            text = "×"
-            setTextColor(palette.accent)
-            textSize = 19f
-            isAllCaps = false
+            text = ""
+            contentDescription = "Закрыть"
             minWidth = 0
             minimumWidth = 0
             minHeight = 0
             minimumHeight = 0
             setPadding(0, 0, 0, 0)
-            background = rounded(panelColor, 10f, lineColor)
+            background = rounded(panelColor, 12f, lineColor)
+            foreground = TechIconDrawable(TechIconDrawable.Kind.CLOSE, palette.accent)
             setOnClickListener { dialog.dismiss() }
-        }, LinearLayout.LayoutParams(dp(40), dp(40)))
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         header.addView(TextView(activity).apply {
             text = "Корректировка и повтор запроса"
             setTextColor(textColor)
@@ -95,14 +94,14 @@ internal class NetworkReplayController(
         }, LinearLayout.LayoutParams(-1, dp(46)).apply { setMargins(dp(8), dp(6), dp(8), dp(4)) })
 
         dialog.setContentView(root)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.setOnShowListener {
-            val dm = activity.resources.displayMetrics
-            dialog.window?.apply {
-                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                setLayout((dm.widthPixels * 0.96f).toInt(), (dm.heightPixels * 0.90f).toInt())
-                setGravity(Gravity.CENTER)
-                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        val dm = activity.resources.displayMetrics
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setGravity(Gravity.CENTER)
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            attributes = attributes.apply {
+                width = (dm.widthPixels * 0.96f).toInt()
+                height = (dm.heightPixels * 0.90f).toInt()
             }
         }
         dialog.show()

@@ -87,9 +87,9 @@ class TechIconDrawable(
             }
 
             Kind.RELOAD -> {
-                canvas.drawArc(RectF(5.3f, 5.3f, 18.7f, 18.7f), -38f, 300f, false, stroke)
-                canvas.drawLine(18.3f, 5.4f, 18.3f, 9.2f, stroke)
-                canvas.drawLine(18.3f, 5.4f, 14.5f, 5.4f, stroke)
+                canvas.drawArc(RectF(5.2f, 5.2f, 18.8f, 18.8f), 40f, 285f, false, stroke)
+                canvas.drawLine(17.6f, 8.2f, 14.2f, 7.0f, stroke)
+                canvas.drawLine(17.6f, 8.2f, 16.6f, 11.5f, stroke)
             }
 
             Kind.STOP -> canvas.drawRoundRect(RectF(6.8f, 6.8f, 17.2f, 17.2f), 2f, 2f, fill)
@@ -133,8 +133,11 @@ class TechIconDrawable(
             }
 
             Kind.CLOSE -> {
-                canvas.drawLine(5.8f, 5.8f, 18.2f, 18.2f, stroke)
-                canvas.drawLine(18.2f, 5.8f, 5.8f, 18.2f, stroke)
+                val normalWidth = stroke.strokeWidth
+                stroke.strokeWidth = 2.4f
+                canvas.drawLine(3.8f, 3.8f, 20.2f, 20.2f, stroke)
+                canvas.drawLine(20.2f, 3.8f, 3.8f, 20.2f, stroke)
+                stroke.strokeWidth = normalWidth
             }
 
             Kind.BOOKMARK_ADD -> {

@@ -167,12 +167,15 @@ internal object CookieTraceDetailsDialog {
             .setView(scroll)
             .setNegativeButton("Назад", null)
             .create()
+        val dm = activity.resources.displayMetrics
+        dialog.window?.apply {
+            setBackgroundDrawable(round(activity, ink, 16, line))
+            attributes = attributes.apply {
+                width = (dm.widthPixels * 0.97).toInt()
+                height = (dm.heightPixels * 0.92).toInt()
+            }
+        }
         dialog.setOnShowListener {
-            dialog.window?.setLayout(
-                (activity.resources.displayMetrics.widthPixels * 0.97).toInt(),
-                (activity.resources.displayMetrics.heightPixels * 0.92).toInt()
-            )
-            dialog.window?.setBackgroundDrawable(round(activity, ink, 16, line))
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
                 setTextColor(cyan)
                 setOnClickListener {
