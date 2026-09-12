@@ -2,6 +2,7 @@ package ru.evrasia.research
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 class ResearchArchive {
@@ -24,6 +25,18 @@ class ResearchArchive {
     @Volatile internal var selectedSessionId: String = ""
     @Volatile internal var selectedStartedAt: Long = 0L
     @Volatile internal var selectedEndedAt: Long = 0L
+
+    @Synchronized fun beginForensicSession(startedAt: Long): String {
+        val id = UUID.randomUUID().toString()
+        selectedSessionId = id
+        selectedStartedAt = startedAt
+        selectedEndedAt = 0L
+        return id
+    }
+
+    @Synchronized fun endForensicSession(endedAt: Long) {
+        selectedEndedAt = endedAt
+    }
 
     @Synchronized fun addRecord(record: JSONObject): JSONObject {
         forensicEnricher.enrich(record)
