@@ -3,6 +3,29 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v31-START -->
+## v31 — 2026-09-12T19:18:37Z
+
+- Release commit: `c1dc5c53f67043ccd822c2c3eb5cb187fd6eea4e`
+- Artifact: `web-research-v31.apk`
+- SHA-256: `fcdfaefd53b8f5c42ab15f344b26fce18bdf8b0cb69d49e83e7cd3786da04c99`
+- Previous release: **v30**
+
+### Changes
+
+- ui: stabilize menus and polish browser controls
+- release: publish polished stable menu interactions [release]
+
+### Changed files
+
+- `app/src/main/java/ru/evrasia/research/CookieTraceDetailsDialog.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailsController.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkReplayController.kt`
+- `app/src/main/java/ru/evrasia/research/TechIconDrawable.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt`
+<!-- AUTO-CHANGELOG-v31-END -->
 <!-- AUTO-CHANGELOG-v30-START -->
 ## v30 — 2026-09-12T18:23:23Z
 

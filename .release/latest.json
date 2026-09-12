@@ -1,23 +1,28 @@
 {
   "schemaVersion": 1,
-  "releaseNumber": 30,
-  "tag": "v30",
-  "versionCode": 30,
-  "versionName": "v30",
+  "releaseNumber": 31,
+  "tag": "v31",
+  "versionCode": 31,
+  "versionName": "v31",
   "packageId": "web.research",
-  "commit": "5d598ee1d3ed265725c651242785592b8d26c50d",
-  "artifact": "web-research-v30.apk",
-  "sha256": "0a71e3562aa0df21bb085d9e385869c1714bc0d3435b49e977988b6739daae59",
-  "publishedAt": "2026-09-12T18:23:23Z",
-  "previousRelease": "v29",
-  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v30",
-  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v30/web-research-v30.apk",
+  "commit": "c1dc5c53f67043ccd822c2c3eb5cb187fd6eea4e",
+  "artifact": "web-research-v31.apk",
+  "sha256": "fcdfaefd53b8f5c42ab15f344b26fce18bdf8b0cb69d49e83e7cd3786da04c99",
+  "publishedAt": "2026-09-12T19:18:37Z",
+  "previousRelease": "v30",
+  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v31",
+  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v31/web-research-v31.apk",
   "commits": [
-    "ui: enlarge and strengthen vector icons",
-    "release: publish larger bolder vector icons [release]"
+    "ui: stabilize menus and polish browser controls",
+    "release: publish polished stable menu interactions [release]"
   ],
   "changedFiles": [
-    "app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailViews.kt",
-    "app/src/main/java/ru/evrasia/research/TechIconDrawable.kt"
+    "app/src/main/java/ru/evrasia/research/CookieTraceDetailsDialog.kt",
+    "app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt",
+    "app/src/main/java/ru/evrasia/research/NetworkDebuggerDetailsController.kt",
+    "app/src/main/java/ru/evrasia/research/NetworkReplayController.kt",
+    "app/src/main/java/ru/evrasia/research/TechIconDrawable.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt"
   ]
 }
