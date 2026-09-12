@@ -100,6 +100,18 @@ internal class ForensicExportBuilder(private val archive: ResearchArchive) {
         return out
     }
 
+    fun snapshotHistory(): JSONArray {
+        val out = JSONArray()
+        archive.snapshots.entries.sortedBy { it.key }.forEach { (capturedAt, snapshot) ->
+            out.put(
+                JSONObject()
+                    .put("capturedAt", capturedAt)
+                    .put("snapshot", JSONObject(snapshot.toString()))
+            )
+        }
+        return out
+    }
+
     fun timeline(): JSONArray {
         val rows = mutableListOf<JSONObject>()
         synchronized(archive) {
