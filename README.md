@@ -3,20 +3,19 @@
 Android WebView-инструмент для максимально полного захвата текущей браузерной сессии, последующего экспорта исходных данных в ZIP и ручного анализа.
 
 <!-- AUTO-RELEASE-START -->
-<!-- release-trigger-v33 -->
 ## Текущий релиз
 
-- Версия: **v32**
-- `versionCode`: **32**
-- `versionName`: **v32**
+- Версия: **v33**
+- `versionCode`: **33**
+- `versionName`: **v33**
 - package: `web.research`
-- commit: `3a9fe1f5c54fc2aae8bcb849d4bdd4678e1bbd7f`
-- APK: `web-research-v32.apk`
-- SHA-256: `4667c4f0239142e6c1dc0861607c263df70fd4c90b80af9ac60170b311c23b7b`
-- Опубликован: `2026-09-12T19:45:47Z`
-- Предыдущий релиз: **v31**
-- Release: https://github.com/lvlaksim1/web-research/releases/tag/v32
-- APK: https://github.com/lvlaksim1/web-research/releases/download/v32/web-research-v32.apk
+- commit: `4a6191c9575d5560c8a47bac86998d697bb49b20`
+- APK: `web-research-v33.apk`
+- SHA-256: `170ccffc8ef657091f2a478b16a288a6918b151290899202b5041ae2015fad74`
+- Опубликован: `2026-09-12T20:29:36Z`
+- Предыдущий релиз: **v32**
+- Release: https://github.com/lvlaksim1/web-research/releases/tag/v33
+- APK: https://github.com/lvlaksim1/web-research/releases/download/v33/web-research-v33.apk
 <!-- AUTO-RELEASE-END -->
 
 ## Назначение

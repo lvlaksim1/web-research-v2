@@ -1,25 +1,31 @@
 {
   "schemaVersion": 1,
-  "releaseNumber": 32,
-  "tag": "v32",
-  "versionCode": 32,
-  "versionName": "v32",
+  "releaseNumber": 33,
+  "tag": "v33",
+  "versionCode": 33,
+  "versionName": "v33",
   "packageId": "web.research",
-  "commit": "3a9fe1f5c54fc2aae8bcb849d4bdd4678e1bbd7f",
-  "artifact": "web-research-v32.apk",
-  "sha256": "4667c4f0239142e6c1dc0861607c263df70fd4c90b80af9ac60170b311c23b7b",
-  "publishedAt": "2026-09-12T19:45:47Z",
-  "previousRelease": "v31",
-  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v32",
-  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v32/web-research-v32.apk",
+  "commit": "4a6191c9575d5560c8a47bac86998d697bb49b20",
+  "artifact": "web-research-v33.apk",
+  "sha256": "170ccffc8ef657091f2a478b16a288a6918b151290899202b5041ae2015fad74",
+  "publishedAt": "2026-09-12T20:29:36Z",
+  "previousRelease": "v32",
+  "releaseUrl": "https://github.com/lvlaksim1/web-research/releases/tag/v33",
+  "artifactUrl": "https://github.com/lvlaksim1/web-research/releases/download/v33/web-research-v33.apk",
   "commits": [
-    "ui: fix result dialog placement and standardize action icons",
-    "ui: pin result actions and apply themes safely",
-    "release: v32 [release]"
+    "ui: pin cookie actions below scrolling list",
+    "ui: add bounded ZIP capture and streamline browser controls",
+    "release: v33 [release]"
   ],
   "changedFiles": [
-    "app/src/main/java/ru/evrasia/research/ResultDelivery.kt",
-    "app/src/main/java/ru/evrasia/research/TechIconDrawable.kt",
-    "app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt"
+    "app/src/main/java/ru/evrasia/research/NetworkDebuggerActivity.kt",
+    "app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt",
+    "app/src/main/java/ru/evrasia/research/NetworkRequestActions.kt",
+    "app/src/main/java/ru/evrasia/research/ResearchArchive.kt",
+    "app/src/main/java/ru/evrasia/research/WebBookmarkController.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchExportController.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt",
+    "app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt"
   ]
 }

@@ -3,6 +3,32 @@
 История опубликованных релизов. Новые release-блоки добавляются автоматически сверху; ручной текст вне автоматически управляемых блоков сохраняется.
 
 <!-- AUTO-CHANGELOG-INSERT -->
+<!-- AUTO-CHANGELOG-v33-START -->
+## v33 — 2026-09-12T20:29:36Z
+
+- Release commit: `4a6191c9575d5560c8a47bac86998d697bb49b20`
+- Artifact: `web-research-v33.apk`
+- SHA-256: `170ccffc8ef657091f2a478b16a288a6918b151290899202b5041ae2015fad74`
+- Previous release: **v32**
+
+### Changes
+
+- ui: pin cookie actions below scrolling list
+- ui: add bounded ZIP capture and streamline browser controls
+- release: v33 [release]
+
+### Changed files
+
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerActivity.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkDebuggerControlsController.kt`
+- `app/src/main/java/ru/evrasia/research/NetworkRequestActions.kt`
+- `app/src/main/java/ru/evrasia/research/ResearchArchive.kt`
+- `app/src/main/java/ru/evrasia/research/WebBookmarkController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchBrowserLayout.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchExportController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchMenuController.kt`
+- `app/src/main/java/ru/evrasia/research/WebResearchV10Activity.kt`
+<!-- AUTO-CHANGELOG-v33-END -->
 <!-- AUTO-CHANGELOG-v32-START -->
 ## v32 — 2026-09-12T19:45:47Z
 
