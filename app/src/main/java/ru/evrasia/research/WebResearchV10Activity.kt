@@ -290,6 +290,15 @@ class WebResearchV10Activity : AppCompatActivity() {
         if (startedAt == null) {
             zipRecordingStartedAt = System.currentTimeMillis()
             captureEnvironment(zipRecordingStartedAt!!)
+            capturePageSnapshot()
+            addRecord(
+                JSONObject()
+                    .put("source", "checkpoint")
+                    .put("time", zipRecordingStartedAt!!)
+                    .put("label", "before")
+                    .put("reason", "recording_start")
+                    .put("url", currentPage())
+            )
             WebResearchBrowserLayout.setZipRecording(this, browserViews, true)
             zipButton.contentDescription = "Остановить запись ZIP"
         } else {
