@@ -89,6 +89,21 @@ class ResearchArchive {
         val copy = JSONObject(value.toString())
         snapshot = copy
         snapshots[capturedAt] = JSONObject(copy.toString())
+        val sessionId = selectedSessionId
+        if (sessionId.isNotBlank()) {
+            val label = if (selectedEndedAt > 0L && capturedAt >= selectedEndedAt) "after" else "checkpoint"
+            putArtifact(
+                "capture-session/$sessionId/checkpoints/$label-$capturedAt.json",
+                copy.toString(2).toByteArray(Charsets.UTF_8)
+            )
+            val html = copy.optString("html", "")
+            if (html.isNotEmpty()) {
+                putArtifact(
+                    "capture-session/$sessionId/dom/$label-$capturedAt.html",
+                    html.toByteArray(Charsets.UTF_8)
+                )
+            }
+        }
         if (snapshots.size > 24) {
             snapshots.keys.sorted().take(snapshots.size - 24).forEach(snapshots::remove)
         }
