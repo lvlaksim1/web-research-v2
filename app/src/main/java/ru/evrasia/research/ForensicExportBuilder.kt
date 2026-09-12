@@ -319,6 +319,7 @@ internal class ForensicExportBuilder(private val archive: ResearchArchive) {
     fun rootManifest(pageUrl: String, requests: JSONArray): JSONObject {
         val legacy = SessionManifestBuilder(archive).build(pageUrl)
         val sections = JSONObject()
+            .put("environment", status(if (archive.extraArtifacts.containsKey("environment.json")) "complete" else "unavailable", "Environment metadata is stored as browser/environment.json for backward-compatible artifact routing."))
             .put("network", status("partial", "Exact response bodies are captured for instrumented fetch/XHR; generic pass-through WebView responses remain API-limited."))
             .put("javascript", status(if (archive.scripts.isNotEmpty()) "partial" else "unavailable", "External copies are derivative evidence and document-start coverage is best-effort."))
             .put("cookies", status("partial", "CookieManager snapshots include the native cookie jar; exact per-request cookie membership is not exposed by WebView for every request."))
