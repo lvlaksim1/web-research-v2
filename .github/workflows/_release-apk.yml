@@ -63,7 +63,6 @@ jobs:
       apk_size_bytes: ${{ steps.apk-size.outputs.apk_size_bytes }}
       apk_size_mib: ${{ steps.apk-size.outputs.apk_size_mib }}
       apk_size_delta: ${{ steps.apk-size.outputs.apk_size_delta }}
-      telegram_size_report: ${{ steps.apk-size.outputs.telegram_report }}
     steps:
       - name: Define APK metadata
         id: metadata
@@ -320,13 +319,7 @@ jobs:
           def pct(value):
               return (value / apk_size * 100) if apk_size else 0.0
 
-          def short_name(name, limit=50):
-              if len(name) <= limit:
-                  return name
-              return "…" + name[-(limit - 1):]
-
           top_entries = sorted(entries, key=lambda item: item[0], reverse=True)[:10]
-          top_telegram = top_entries[:3]
 
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
               summary.write("## APK size audit\n\n")
@@ -355,49 +348,12 @@ jobs:
               for _, tag, size in recent_history:
                   summary.write(f"| {tag} | {fmt_mib(size)} |\n")
 
-          labels = {
-              "Native libraries": "Native",
-              "DEX / bytecode": "DEX",
-              "JS / Hermes bundle": "JS/Hermes",
-              "Android resources": "Resources",
-              "Other assets": "Assets",
-              "Other": "Other",
-          }
-          telegram = [f"APK: {fmt_mib(apk_size)} ({apk_size:,} B)"]
-          if previous_size is not None:
-              sign = "+" if delta >= 0 else ""
-              telegram.append(f"Δ к {previous_tag}: {sign}{delta / mib:.2f} MiB")
-          telegram.append("")
-          telegram.append("Состав APK:")
-          for name in category_order:
-              value = categories[name]["compressed"]
-              telegram.append(f"{labels[name]}: {fmt_mib(value)} · {pct(value):.1f}%")
-
-          telegram.append("")
-          telegram.append("Топ-3 файлов:")
-          for number, (compressed, _, name) in enumerate(top_telegram, 1):
-              telegram.append(f"{number}. {short_name(name)} — {fmt_mib(compressed)}")
-
-          telegram.append("")
-          history_text = " · ".join(f"{tag} {size / mib:.2f}" for _, tag, size in recent_history)
-          telegram.append(f"История MiB: {history_text}")
-
-          telegram_report = "\n".join(telegram)
-          if len(telegram_report) > 900:
-              telegram_report = telegram_report[:897] + "..."
-
-          print("APK size Telegram report:")
-          print(telegram_report)
-          print(f"Telegram report length: {len(telegram_report)} characters")
-
           output_path = Path(os.environ["GITHUB_OUTPUT"])
           with output_path.open("a", encoding="utf-8") as output:
               output.write(f"apk_size_bytes={apk_size}\n")
               output.write(f"apk_size_mib={apk_size / mib:.2f}\n")
               output.write(f"apk_size_delta={delta / mib:+.2f}" if delta is not None else "apk_size_delta=n/a")
-              output.write("\ntelegram_report<<APK_SIZE_REPORT\n")
-              output.write(telegram_report)
-              output.write("\nAPK_SIZE_REPORT\n")
+              output.write("\n")
           PY
 
       - name: Write APK verification summary
@@ -547,7 +503,6 @@ jobs:
           PROJECT_NAME: ${{ inputs.project_name }}
           RELEASE_NUMBER: ${{ needs.build-sign-verify.outputs.effective_release_number }}
           RELEASE_APK_FILENAME: ${{ needs.build-sign-verify.outputs.apk_filename }}
-          APK_SIZE_REPORT: ${{ needs.build-sign-verify.outputs.telegram_size_report }}
         shell: bash
         run: |
           set -u
@@ -564,6 +519,29 @@ jobs:
           TELEGRAM_MAX_FILE_BYTES=$((50 * 1024 * 1024))
           DELIVERY_MODE="link"
           APK_PATH=""
+
+          PREVIOUS_NUMBER=$(gh api --paginate "/repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name' 2>/dev/null | sed -nE 's/^v([0-9]+)$/\1/p' | awk -v current="$RELEASE_NUMBER" '$1 < current+0' | sort -n | tail -1)
+          PREVIOUS_TAG=""
+          if [ -n "$PREVIOUS_NUMBER" ]; then
+            PREVIOUS_TAG="v${PREVIOUS_NUMBER}"
+          fi
+
+          CHANGELOG_LINES=""
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG_LINES=$(gh api "/repos/${GITHUB_REPOSITORY}/compare/${PREVIOUS_TAG}...${GITHUB_SHA}" --jq '.commits[].commit.message | split("\n")[0]' 2>/dev/null | awk 'NF && $0 !~ /^release: v[0-9]+ \[release\]$/ && $0 !~ /^docs: update release documentation/ {print "• " $0}' || true)
+          fi
+          if [ -z "$CHANGELOG_LINES" ]; then
+            CHANGELOG_LINES="• Служебный релиз без отдельных пользовательских изменений"
+          fi
+          CHANGELOG_TEXT=$(CHANGELOG_LINES="$CHANGELOG_LINES" python3 - <<'PY'
+import os
+text = os.environ.get("CHANGELOG_LINES", "").strip()
+limit = 800
+if len(text) > limit:
+    text = text[:limit - 1].rstrip() + "…"
+print(text)
+PY
+          )
 
           RELEASE_JSON=$(gh api "/repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" 2>/dev/null || true)
           APK_SIZE=$(printf '%s' "$RELEASE_JSON" | jq -r --arg name "$RELEASE_APK_FILENAME" '.assets[]? | select(.name == $name) | .size // empty' | head -1)
@@ -600,7 +578,7 @@ jobs:
 
           SUCCESS=false
           if [ "$DELIVERY_MODE" = "apk" ]; then
-            printf -v CAPTION '%s %s собран успешно.\n\n%s' "$PROJECT_NAME" "$RELEASE_TAG" "$APK_SIZE_REPORT"
+            printf -v CAPTION '%s %s собран успешно.\n\nИзменения:\n%s' "$PROJECT_NAME" "$RELEASE_TAG" "$CHANGELOG_TEXT"
             for ATTEMPT in 1 2 3; do
               if RESPONSE=$(curl --silent --show-error --fail-with-body -X POST "$API/sendDocument" -F "chat_id=${TELEGRAM_CHAT_ID}" -F "document=@${APK_PATH};type=application/vnd.android.package-archive" -F "caption=${CAPTION}"); then
                 if printf '%s' "$RESPONSE" | jq -e '.ok == true' >/dev/null 2>&1; then
@@ -613,7 +591,7 @@ jobs:
               fi
             done
           else
-            printf -v TEXT '%s %s собран успешно.\n\n%s\n\nAPK превышает лимит отправки файла или файл недоступен для загрузки ботом.\nСкачать APK:\n%s' "$PROJECT_NAME" "$RELEASE_TAG" "$APK_SIZE_REPORT" "$APK_URL"
+            printf -v TEXT '%s %s собран успешно.\n\nИзменения:\n%s\n\nAPK превышает лимит отправки файла или файл недоступен для загрузки ботом.\nСкачать APK:\n%s' "$PROJECT_NAME" "$RELEASE_TAG" "$CHANGELOG_TEXT" "$APK_URL"
             for ATTEMPT in 1 2 3; do
               if RESPONSE=$(curl --silent --show-error --fail-with-body -X POST "$API/sendMessage" --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${TEXT}"); then
                 if printf '%s' "$RESPONSE" | jq -e '.ok == true' >/dev/null 2>&1; then
