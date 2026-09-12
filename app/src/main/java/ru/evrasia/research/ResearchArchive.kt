@@ -12,6 +12,7 @@ class ResearchArchive {
     val resources = ConcurrentHashMap<String, ByteArray>()
     val resourceMeta = ConcurrentHashMap<String, JSONObject>()
     val extraArtifacts = ConcurrentHashMap<String, ByteArray>()
+    val snapshots = ConcurrentHashMap<Long, JSONObject>()
     private val recordCapturedAt = mutableListOf<Long>()
     private val scriptCapturedAt = ConcurrentHashMap<String, Long>()
     private val scriptErrorCapturedAt = ConcurrentHashMap<String, Long>()
@@ -70,8 +71,14 @@ class ResearchArchive {
     }
 
     fun updateSnapshot(value: JSONObject) {
-        snapshotCapturedAt = System.currentTimeMillis()
-        snapshot = value
+        val capturedAt = System.currentTimeMillis()
+        snapshotCapturedAt = capturedAt
+        val copy = JSONObject(value.toString())
+        snapshot = copy
+        snapshots[capturedAt] = JSONObject(copy.toString())
+        if (snapshots.size > 24) {
+            snapshots.keys.sorted().take(snapshots.size - 24).forEach(snapshots::remove)
+        }
     }
 
     @Synchronized fun snapshotWindow(startedAt: Long, endedAt: Long, sessionId: String = ""): ResearchArchive {
@@ -107,6 +114,11 @@ class ResearchArchive {
             val belongsToSession = sessionId.isNotBlank() && key.startsWith("capture-session/$sessionId/")
             if (capturedAt in startedAt..endedAt || belongsToSession) out.extraArtifacts[key] = value.copyOf()
         }
+        snapshots.entries.sortedBy { it.key }.forEach { (capturedAt, value) ->
+            if (capturedAt in startedAt..(endedAt + 1500L)) {
+                out.snapshots[capturedAt] = JSONObject(value.toString())
+            }
+        }
 
         out.snapshot = try { JSONObject(snapshot.toString()) } catch (_: Exception) { JSONObject() }
         out.snapshotCapturedAt = snapshotCapturedAt
@@ -123,6 +135,7 @@ class ResearchArchive {
         resources.clear()
         resourceMeta.clear()
         extraArtifacts.clear()
+        snapshots.clear()
         recordCapturedAt.clear()
         scriptCapturedAt.clear()
         scriptErrorCapturedAt.clear()
