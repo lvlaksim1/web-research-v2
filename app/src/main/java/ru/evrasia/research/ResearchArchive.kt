@@ -107,6 +107,32 @@ class ResearchArchive {
                     html.toByteArray(Charsets.UTF_8)
                 )
             }
+            if (copy.has("cookie") || copy.has("nativeCookie")) {
+                val cookies = JSONObject()
+                    .put("capturedAt", capturedAt)
+                    .put("page", copy.optString("url", ""))
+                    .put("documentCookie", copy.optString("cookie", ""))
+                    .put("nativeCookie", copy.optString("nativeCookie", ""))
+                    .put("nativeCookieSource", "CookieManager")
+                val cookiePath = if (label == "before" || label == "after") {
+                    "capture-session/$sessionId/cookies/$label.json"
+                } else {
+                    "capture-session/$sessionId/cookies/checkpoints/$capturedAt.json"
+                }
+                putArtifact(cookiePath, cookies.toString(2).toByteArray(Charsets.UTF_8))
+            }
+            copy.optJSONObject("localStorage")?.let {
+                putArtifact(
+                    "capture-session/$sessionId/storage/$label/localStorage.json",
+                    it.toString(2).toByteArray(Charsets.UTF_8)
+                )
+            }
+            copy.optJSONObject("sessionStorage")?.let {
+                putArtifact(
+                    "capture-session/$sessionId/storage/$label/sessionStorage.json",
+                    it.toString(2).toByteArray(Charsets.UTF_8)
+                )
+            }
         }
         if (snapshots.size > 24) {
             snapshots.keys.sorted().take(snapshots.size - 24).forEach(snapshots::remove)
